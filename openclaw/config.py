@@ -13,7 +13,6 @@ class TelegramConfig(BaseModel):
 
 class OpenClawConfig(BaseModel):
     telegram: TelegramConfig
-    anthropic_api_key: SecretStr
     topics: list[str] = []
 
 

@@ -4,7 +4,8 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 
-from anthropic import AsyncAnthropic
+from openai import AsyncOpenAI
+from openclaw.auth import get_access_token
 from openclaw.config import OpenClawConfig
 
 log = logging.getLogger(__name__)
@@ -29,19 +30,14 @@ class Session:
         return self.history[-(MAX_HISTORY_TURNS * 2):]
 
 
-def _extract_text(msg) -> str:
-    return "".join(block.text for block in msg.content if block.type == "text")
-
-
 class Orchestrator:
     def __init__(self, config: OpenClawConfig) -> None:
         self._config = config
-        self._client = AsyncAnthropic(
-            api_key=config.anthropic_api_key.get_secret_value()
-        )
         self._sessions: dict[str, Session] = {}
         self._system_prompt = self._build_system_prompt()
         self._on_reply: Callable[[str, str], Awaitable[None]] | None = None
+        self._cached_token: str | None = None
+        self._client: AsyncOpenAI | None = None
 
     def set_reply_callback(self, cb: Callable[[str, str], Awaitable[None]]) -> None:
         self._on_reply = cb
@@ -60,6 +56,13 @@ class Orchestrator:
             self._sessions[chat_id] = Session(chat_id=chat_id)
         return self._sessions[chat_id]
 
+    async def _get_client(self) -> AsyncOpenAI:
+        token = await asyncio.to_thread(get_access_token)
+        if token != self._cached_token:
+            self._cached_token = token
+            self._client = AsyncOpenAI(api_key=token)
+        return self._client
+
     async def handle_message(self, chat_id: str, text: str) -> None:
         session = self._get_or_create_session(chat_id)
         await session.queue.put(text)
@@ -73,7 +76,7 @@ class Orchestrator:
             except asyncio.QueueEmpty:
                 break
             try:
-                reply = await self._run_react_loop(session, text)
+                reply = await self._call_llm(session, text)
                 session.history.append(Message(role="assistant", content=reply))
                 if self._on_reply:
                     await self._on_reply(session.chat_id, reply)
@@ -82,38 +85,17 @@ class Orchestrator:
             finally:
                 session.queue.task_done()
 
-    async def _run_react_loop(self, session: Session, user_text: str) -> str:
+    async def _call_llm(self, session: Session, user_text: str) -> str:
         session.history.append(Message(role="user", content=user_text))
         messages = self._assemble_context(session)
+        client = await self._get_client()
 
-        for _ in range(10):
-            async with self._client.messages.stream(
-                model="claude-opus-4-5",
-                max_tokens=4096,
-                system=self._system_prompt,
-                messages=messages,
-                tools=[],
-            ) as stream:
-                final_msg = await stream.get_final_message()
-
-            if final_msg.stop_reason == "end_turn":
-                return _extract_text(final_msg)
-
-            if final_msg.stop_reason == "tool_use":
-                tool_results = await self._dispatch_tools(final_msg)
-                messages.append({"role": "assistant", "content": final_msg.content})
-                messages.append({"role": "user", "content": tool_results})
-                continue
-
-            return _extract_text(final_msg)
-
-        return "[Max iterations reached]"
-
-    async def _dispatch_tools(self, msg) -> list[dict]:
-        return [
-            {"type": "tool_result", "tool_use_id": b.id, "content": "Tool not implemented"}
-            for b in msg.content if b.type == "tool_use"
-        ]
+        response = await client.responses.create(
+            model="codex-mini-latest",
+            instructions=self._system_prompt,
+            input=messages,
+        )
+        return response.output_text
 
     def _assemble_context(self, session: Session) -> list[dict]:
         return [
