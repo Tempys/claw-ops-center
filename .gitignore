@@ -1,4 +1,12 @@
 .env
 __pycache__/
 *.pyc
+*.pyo
 .idea/
+venv/
+.venv/
+*.db
+.DS_Store
+dist/
+build/
+*.egg-info/
