@@ -1,6 +1,8 @@
+import asyncio
 import logging
 
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage
+from langgraph.graph.state import CompiledStateGraph
 from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
@@ -11,9 +13,10 @@ log = logging.getLogger(__name__)
 
 
 class TelegramAdapter:
-    def __init__(self, config: OpenClawConfig, graph) -> None:
+    def __init__(self, config: OpenClawConfig, graph: CompiledStateGraph) -> None:
         self._config = config
         self._graph = graph
+        self._locks: dict[str, asyncio.Lock] = {}
         self._app: Application = (
             Application.builder()
             .token(config.telegram.bot_token.get_secret_value())
@@ -26,6 +29,9 @@ class TelegramAdapter:
     async def _on_message(
         self, update: Update, context: ContextTypes.DEFAULT_TYPE
     ) -> None:
+        if not update.effective_chat or not update.message or not update.message.text:
+            return
+
         chat_id = str(update.effective_chat.id)
         text = update.message.text
 
@@ -35,11 +41,29 @@ class TelegramAdapter:
 
         await context.bot.send_chat_action(chat_id=chat_id, action=ChatAction.TYPING)
 
-        result = await self._graph.ainvoke(
-            {"messages": [HumanMessage(content=text)]},
-            config={"configurable": {"thread_id": chat_id}},
-        )
-        reply = result["messages"][-1].content
+        lock = self._locks.setdefault(chat_id, asyncio.Lock())
+        async with lock:
+            try:
+                result = await self._graph.ainvoke(
+                    {"messages": [HumanMessage(content=text)]},
+                    config={"configurable": {"thread_id": chat_id}},
+                )
+                last = result["messages"][-1]
+                if isinstance(last, AIMessage) and isinstance(last.content, list):
+                    reply = " ".join(
+                        block["text"]
+                        for block in last.content
+                        if block.get("type") == "text"
+                    )
+                else:
+                    reply = str(last.content)
+            except Exception:
+                log.exception("Graph invocation failed for chat %s", chat_id)
+                reply = "Sorry, something went wrong. Please try again."
+
+        if len(reply) > 4096:
+            reply = reply[:4090] + "\n[…]"
+
         await context.bot.send_message(chat_id=chat_id, text=reply)
 
     def run(self) -> None:
