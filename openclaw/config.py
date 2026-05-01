@@ -2,7 +2,7 @@ import os
 import re
 import yaml
 from pathlib import Path
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, Field, SecretStr
 from dotenv import load_dotenv
 
 
@@ -19,15 +19,17 @@ class LLMConfig(BaseModel):
 class OpenClawConfig(BaseModel):
     telegram: TelegramConfig
     llm: LLMConfig
-    topics: list[str] = []
+    topics: list[str] = Field(default_factory=list)
 
 
 def _substitute_env_vars(text: str) -> str:
-    return re.sub(
-        r'\$\{([^}]+)\}',
-        lambda m: os.environ[m.group(1)],
-        text
-    )
+    def _replace(m: re.Match) -> str:
+        key = m.group(1)
+        if key not in os.environ:
+            raise ValueError(f"Required environment variable '{key}' is not set. Check your .env file.")
+        return os.environ[key]
+
+    return re.sub(r'\$\{([^}]+)\}', _replace, text)
 
 
 def load_config(path: str | Path = "config.yaml") -> OpenClawConfig:
