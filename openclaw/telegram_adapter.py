@@ -1,25 +1,24 @@
 import logging
 
+from langchain_core.messages import HumanMessage
 from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
 from openclaw.config import OpenClawConfig
-from openclaw.orchestrator import Orchestrator
 
 log = logging.getLogger(__name__)
 
 
 class TelegramAdapter:
-    def __init__(self, config: OpenClawConfig, orchestrator: Orchestrator) -> None:
+    def __init__(self, config: OpenClawConfig, graph) -> None:
         self._config = config
-        self._orchestrator = orchestrator
+        self._graph = graph
         self._app: Application = (
             Application.builder()
             .token(config.telegram.bot_token.get_secret_value())
             .build()
         )
-        self._orchestrator.set_reply_callback(self._send_reply)
         self._app.add_handler(
             MessageHandler(filters.TEXT & ~filters.COMMAND, self._on_message)
         )
@@ -35,10 +34,13 @@ class TelegramAdapter:
             return
 
         await context.bot.send_chat_action(chat_id=chat_id, action=ChatAction.TYPING)
-        await self._orchestrator.handle_message(chat_id, text)
 
-    async def _send_reply(self, chat_id: str, text: str) -> None:
-        await self._app.bot.send_message(chat_id=chat_id, text=text)
+        result = await self._graph.ainvoke(
+            {"messages": [HumanMessage(content=text)]},
+            config={"configurable": {"thread_id": chat_id}},
+        )
+        reply = result["messages"][-1].content
+        await context.bot.send_message(chat_id=chat_id, text=reply)
 
     def run(self) -> None:
         log.info("OpenClaw polling started")

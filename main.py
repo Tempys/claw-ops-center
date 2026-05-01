@@ -1,7 +1,7 @@
 import logging
 
 from openclaw.config import load_config
-from openclaw.orchestrator import Orchestrator
+from openclaw.graph import build_graph
 from openclaw.telegram_adapter import TelegramAdapter
 
 logging.basicConfig(
@@ -12,6 +12,6 @@ logging.basicConfig(
 if __name__ == "__main__":
     config = load_config()
     print(f"OpenClaw starting — Telegram chat: {config.telegram.chat_id}")
-    orchestrator = Orchestrator(config)
-    adapter = TelegramAdapter(config, orchestrator)
+    graph = build_graph(config)
+    adapter = TelegramAdapter(config, graph)
     adapter.run()

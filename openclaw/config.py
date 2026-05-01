@@ -11,8 +11,14 @@ class TelegramConfig(BaseModel):
     chat_id: str
 
 
+class LLMConfig(BaseModel):
+    model: str = "claude-haiku-4-5-20251001"
+    api_key: SecretStr
+
+
 class OpenClawConfig(BaseModel):
     telegram: TelegramConfig
+    llm: LLMConfig
     topics: list[str] = []
 
 
