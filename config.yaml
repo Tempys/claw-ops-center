@@ -7,3 +7,5 @@ llm:
   api_key: "${ANTHROPIC_API_KEY}"
 
 topics: []
+
+sqlite_path: "openclaw.db"

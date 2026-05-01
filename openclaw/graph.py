@@ -1,11 +1,12 @@
 from langchain_anthropic import ChatAnthropic
-from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import create_react_agent
 
 from openclaw.config import OpenClawConfig
 
 
-def build_graph(config: OpenClawConfig):
+def build_graph(config: OpenClawConfig) -> CompiledStateGraph:
     llm = ChatAnthropic(
         model=config.llm.model,
         api_key=config.llm.api_key.get_secret_value(),
@@ -19,6 +20,6 @@ def build_graph(config: OpenClawConfig):
     return create_react_agent(
         model=llm,
         tools=[],
-        checkpointer=MemorySaver(),
+        checkpointer=SqliteSaver.from_conn_string(config.sqlite_path),
         state_modifier=system_prompt,
     )

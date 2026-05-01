@@ -20,6 +20,7 @@ class OpenClawConfig(BaseModel):
     telegram: TelegramConfig
     llm: LLMConfig
     topics: list[str] = Field(default_factory=list)
+    sqlite_path: str = "openclaw.db"
 
 
 def _substitute_env_vars(text: str) -> str:
