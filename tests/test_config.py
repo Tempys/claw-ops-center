@@ -36,3 +36,4 @@ def test_load_config_happy_path(tmp_path, monkeypatch):
     assert config.telegram.chat_id == "12345"
     assert config.llm.api_key.get_secret_value() == "sk-test-key"
     assert config.topics == ["Python"]
+    assert config.sqlite_path == "openclaw.db"

@@ -33,6 +33,18 @@ def _make_context() -> MagicMock:
 
 
 @pytest.mark.asyncio
+async def test_none_guard_returns_early():
+    adapter = _make_adapter()
+    update = MagicMock()
+    update.effective_chat = None
+    context = _make_context()
+
+    await adapter._on_message(update, context)
+
+    context.bot.send_message.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_auth_guard_rejects_unknown_chat():
     adapter = _make_adapter(chat_id="12345")
     update = _make_update(chat_id="99999")
