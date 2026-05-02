@@ -21,7 +21,7 @@ async def main() -> None:
     async with AsyncSqliteSaver.from_conn_string(config.sqlite_path) as checkpointer:
         graph = build_graph(config, checkpointer)
         adapter = TelegramAdapter(config, graph)
-        adapter.run()
+        await adapter.run_async()
 
 
 if __name__ == "__main__":

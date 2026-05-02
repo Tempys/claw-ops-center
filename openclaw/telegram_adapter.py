@@ -69,3 +69,10 @@ class TelegramAdapter:
     def run(self) -> None:
         log.info("OpenClaw polling started")
         self._app.run_polling(allowed_updates=Update.ALL_TYPES)
+
+    async def run_async(self) -> None:
+        log.info("OpenClaw polling started")
+        async with self._app:
+            await self._app.updater.start_polling(allowed_updates=Update.ALL_TYPES)
+            await self._app.start()
+            await asyncio.Event().wait()
