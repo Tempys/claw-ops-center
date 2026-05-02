@@ -25,8 +25,8 @@ def build_graph(config: OpenClawConfig, checkpointer: BaseCheckpointSaver) -> Co
         parts.append(f"You are particularly focused on: {', '.join(config.topics)}.")
     system_prompt = SystemMessage(content="\n".join(parts))
 
-    def call_model(state: State) -> dict:
-        response = llm.invoke([system_prompt] + state["messages"])
+    async def call_model(state: State) -> dict:
+        response = await llm.ainvoke([system_prompt] + state["messages"])
         return {"messages": [response]}
 
     graph = StateGraph(State)

@@ -1,6 +1,7 @@
+import asyncio
 import logging
 
-from langgraph.checkpoint.sqlite import SqliteSaver
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
 from openclaw.config import load_config
 from openclaw.graph import build_graph
@@ -13,10 +14,15 @@ logging.basicConfig(
 
 log = logging.getLogger(__name__)
 
-if __name__ == "__main__":
+
+async def main() -> None:
     config = load_config()
     log.info("OpenClaw starting — Telegram chat: %s", config.telegram.chat_id)
-    with SqliteSaver.from_conn_string(config.sqlite_path) as checkpointer:
+    async with AsyncSqliteSaver.from_conn_string(config.sqlite_path) as checkpointer:
         graph = build_graph(config, checkpointer)
         adapter = TelegramAdapter(config, graph)
         adapter.run()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
