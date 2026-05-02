@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.env
+checkpoints.db
+*.session
+.idea/
+.pytest_cache/
+.worktrees/
