@@ -14,7 +14,6 @@ The original flow diagram proposed:
 
 This has four misalignments with LangGraph best practices:
 
-1. **Agent Router is unnecessary** — both collectors always run; routing is deterministic, not LLM-driven
 2. **No true parallelism** — both collectors can and should run concurrently via native fan-out
 3. **"Aggregator" is the wrong abstraction** — LangGraph uses state reducers for merging; the LLM analysis is a separate concern
 4. **Telegram offset_id managed ad-hoc** — should live in graph state and be persisted automatically via SqliteSaver
@@ -30,9 +29,59 @@ START → telegram_collector ──┐
 START → email_collector ─────┴→ analyze_and_classify → sender → END
 ```
 
-- No router node — fan-out from `START` gives free parallelism
 - Fan-in is automatic: `analyze_and_classify` waits for both collectors before executing
 - `telegram_offset_id` is stored in state and checkpointed via `AsyncSqliteSaver`
+
+### Architecture Diagram
+
+```mermaid
+flowchart TD
+    CRON([Cron Trigger]) --> GRAPH
+
+    subgraph GRAPH["LangGraph — AsyncSqliteSaver checkpoint"]
+        direction TB
+
+        START([START]) --> TC & EC
+
+        subgraph PARALLEL["Parallel fan-out"]
+            direction LR
+            TC["telegram_collector\n─────────────\nreads: telegram_offset_id\nwrites: telegram_offset_id, signals"]
+            EC["email_collector\n─────────────\nreads: email_last_checked\nwrites: email_last_checked, signals"]
+        end
+
+        TC --> AC
+        EC --> AC
+
+        AC["analyze_and_classify\n─────────────\nreads: signals\nwrites: analysis"]
+        SN["sender\n─────────────\nreads: analysis"]
+
+        AC --> SN
+        SN --> ENDNODE([END])
+    end
+
+    subgraph STATE["State — checkpointed per thread_id"]
+        direction LR
+        S1["telegram_offset_id: int"]
+        S2["email_last_checked: float"]
+        S3["signals: list[Signal]\n⊕ operator.add reducer"]
+        S4["analysis: str"]
+    end
+
+    subgraph DEPS["External dependencies"]
+        direction LR
+        PYR["pyrogram\nMTProto — channel history"]
+        IMAP["IMAP / Gmail API\nemail fetch"]
+        ANT["anthropic SDK\nclaude-sonnet-4-6"]
+        PTB["python-telegram-bot\nsend to destination"]
+    end
+
+    TC -. uses .-> PYR
+    EC -. uses .-> IMAP
+    AC -. uses .-> ANT
+    SN -. uses .-> PTB
+
+    GRAPH <-. persists .-> STATE
+```
 
 ### State Schema
 
