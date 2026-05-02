@@ -1,9 +1,17 @@
+from typing import Annotated
+from typing_extensions import TypedDict
 from langchain_anthropic import ChatAnthropic
+from langchain_core.messages import AnyMessage, SystemMessage
 from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.prebuilt import create_react_agent
 
 from openclaw.config import OpenClawConfig
+
+
+class State(TypedDict):
+    messages: Annotated[list[AnyMessage], add_messages]
 
 
 def build_graph(config: OpenClawConfig, checkpointer: BaseCheckpointSaver) -> CompiledStateGraph:
@@ -15,11 +23,15 @@ def build_graph(config: OpenClawConfig, checkpointer: BaseCheckpointSaver) -> Co
     parts = ["You are a personal AI assistant. Be concise and direct."]
     if config.topics:
         parts.append(f"You are particularly focused on: {', '.join(config.topics)}.")
-    system_prompt = "\n".join(parts)
+    system_prompt = SystemMessage(content="\n".join(parts))
 
-    return create_react_agent(
-        model=llm,
-        tools=[],
-        checkpointer=checkpointer,
-        state_modifier=system_prompt,
-    )
+    def call_model(state: State) -> dict:
+        response = llm.invoke([system_prompt] + state["messages"])
+        return {"messages": [response]}
+
+    graph = StateGraph(State)
+    graph.add_node("llm", call_model)
+    graph.add_edge(START, "llm")
+    graph.add_edge("llm", END)
+
+    return graph.compile(checkpointer=checkpointer)
