@@ -7,3 +7,4 @@ checkpoints.db
 .idea/
 .pytest_cache/
 .worktrees/
+.claude/
