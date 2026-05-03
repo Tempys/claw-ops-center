@@ -35,10 +35,11 @@ async def telegram_collector_node(state: State) -> dict:
             messages = [
                 m async for m in client.get_chat_history(
                     config.TELEGRAM_CHANNEL_ID,
-                    limit=100,
+                    limit=1,
                     offset_id=state["telegram_offset_id"],
                 )
             ]
+
         # pyrogram returns messages in descending order (newest first); messages[0] has the highest ID
         if not messages:
             return {}

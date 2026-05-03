@@ -66,7 +66,7 @@ async def _classify_batch(signals: list[Signal]) -> list[Signal]:
 
 
 async def classify_and_filter_node(state: State) -> dict:
-    signals = state["signals"]
+    signals = state["signals"][:5]
     classified: list[Signal] = []
     for i in range(0, len(signals), 5):
         classified.extend(await _classify_batch(signals[i : i + 5]))
