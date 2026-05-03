@@ -1,4 +1,4 @@
-import anthropic
+import openai
 import logging
 
 import news.config as config
@@ -6,7 +6,7 @@ from news.state import Signal, State
 
 log = logging.getLogger(__name__)
 
-_client = anthropic.AsyncAnthropic(api_key=config.ANTHROPIC_API_KEY)
+_client = openai.AsyncOpenAI(api_key=config.OPENAI_API_KEY)
 
 _SYSTEM = (
     "You are an intelligence analyst. Given signals collected from Telegram channels and email, "
@@ -23,10 +23,12 @@ def _format_signals(signals: list[Signal]) -> str:
 
 
 async def analyze_and_classify_node(state: State) -> dict:
-    response = await _client.messages.create(
-        model="claude-sonnet-4-6",
+    response = await _client.chat.completions.create(
+        model="gpt-4o",
         max_tokens=1024,
-        system=_SYSTEM,
-        messages=[{"role": "user", "content": _format_signals(state["signals"])}],
+        messages=[
+            {"role": "system", "content": _SYSTEM},
+            {"role": "user", "content": _format_signals(state["signals"])},
+        ],
     )
-    return {"analysis": response.content[0].text}
+    return {"analysis": response.choices[0].message.content}

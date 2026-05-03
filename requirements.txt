@@ -1,6 +1,6 @@
 langgraph==1.1.10
 langgraph-checkpoint-sqlite==3.0.3
-anthropic==0.94.0
+openai>=1.30.0
 python-telegram-bot==22.7
 pyrogram==2.0.106
 tgcrypto
