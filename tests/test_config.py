@@ -15,7 +15,7 @@ def test_config_reads_all_env_vars():
     assert cfg.EMAIL_PORT == 993
     assert cfg.EMAIL_USERNAME == "test@test.com"
     assert cfg.EMAIL_PASSWORD == "password"
-    assert cfg.ANTHROPIC_API_KEY == "sk-ant-test"
+    assert cfg.OPENAI_API_KEY == "sk-openai-test"
 
 
 def test_config_default_checkpoint_path():
@@ -28,9 +28,10 @@ def test_config_default_checkpoint_path():
 
 
 def test_missing_required_var_raises():
-    env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
+    env = {k: v for k, v in os.environ.items() if k != "OPENAI_API_KEY"}
     with patch.dict(os.environ, env, clear=True):
-        import news.config as cfg
-        import pytest
-        with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
-            importlib.reload(cfg)
+        with patch('dotenv.load_dotenv'):
+            import news.config as cfg
+            import pytest
+            with pytest.raises(ValueError, match="OPENAI_API_KEY"):
+                importlib.reload(cfg)
