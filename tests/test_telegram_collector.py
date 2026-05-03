@@ -67,3 +67,21 @@ async def test_returns_error_signal_and_preserves_offset_on_exception():
     assert result["signals"][0]["classification"] == "error"
     assert result["signals"][0]["source"] == "telegram"
     assert "connection refused" in result["signals"][0]["summary"]
+
+
+async def test_signal_default_classification_is_other():
+    msg = MagicMock(id=300, text="Some message", caption=None)
+
+    async def fake_history(*_a, **_kw):
+        yield msg
+
+    mock_client = AsyncMock()
+    mock_client.get_chat_history = fake_history
+    mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+    mock_client.__aexit__ = AsyncMock(return_value=False)
+
+    with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
+        from news.nodes.telegram_collector import telegram_collector_node
+        result = await telegram_collector_node(STATE)
+
+    assert result["signals"][0]["classification"] == "other"

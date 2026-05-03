@@ -22,7 +22,7 @@ def _to_signal(message: Message) -> Signal:
     text = message.text or message.caption or ""
     return Signal(
         title=text[:80],
-        classification="informational",
+        classification="other",
         summary=text,
         source="telegram",
     )
