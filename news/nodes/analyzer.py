@@ -21,13 +21,6 @@ _CLASSIFY_SYSTEM = (
     "dev_productivity, prompt_engineering, other."
 )
 
-_DIGEST_SYSTEM = (
-    "You are an intelligence analyst. Given classified signals from Telegram channels and email, "
-    "produce a concise digest. Lead with dev-tool signals "
-    "(ai_agent_framework, llm_finetuning, skill_plugin_builder, code_generation, dev_productivity, "
-    "prompt_engineering), then other signals. Omit noise. Be factual and brief."
-)
-
 
 def _format_signals(signals: list[Signal]) -> str:
     lines = ["Signals collected this run:\n"]
@@ -72,20 +65,10 @@ async def _classify_batch(signals: list[Signal]) -> list[Signal]:
     return [next(ne_iter) if s["classification"] != "error" else s for s in signals]
 
 
-async def analyze_and_classify_node(state: State) -> dict:
+async def classify_and_filter_node(state: State) -> dict:
     signals = state["signals"]
-    parts = []
-
+    classified: list[Signal] = []
     for i in range(0, len(signals), 5):
-        batch = await _classify_batch(signals[i : i + 5])
-        response = await _client.chat.completions.create(
-            model="gpt-4o-mini",
-            max_tokens=1024,
-            messages=[
-                {"role": "system", "content": _DIGEST_SYSTEM},
-                {"role": "user", "content": _format_signals(batch)},
-            ],
-        )
-        parts.append(response.choices[0].message.content)
-
-    return {"analysis": "\n\n".join(parts)}
+        classified.extend(await _classify_batch(signals[i : i + 5]))
+    dev_tool = [s for s in classified if s["classification"] not in {"other", "error"}]
+    return {"filtered_signals": dev_tool}
