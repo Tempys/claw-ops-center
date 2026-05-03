@@ -23,12 +23,17 @@ def _format_signals(signals: list[Signal]) -> str:
 
 
 async def analyze_and_classify_node(state: State) -> dict:
-    response = await _client.chat.completions.create(
-        model="gpt-4o",
-        max_tokens=1024,
-        messages=[
-            {"role": "system", "content": _SYSTEM},
-            {"role": "user", "content": _format_signals(state["signals"])},
-        ],
-    )
-    return {"analysis": response.choices[0].message.content}
+    signals = state["signals"]
+    parts = []
+    for i in range(0, len(signals), 5):
+        batch = signals[i : i + 5]
+        response = await _client.chat.completions.create(
+            model="gpt-4o-mini",
+            max_tokens=1024,
+            messages=[
+                {"role": "system", "content": _SYSTEM},
+                {"role": "user", "content": _format_signals(batch)},
+            ],
+        )
+        parts.append(response.choices[0].message.content)
+    return {"analysis": "\n\n".join(parts)}

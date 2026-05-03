@@ -14,6 +14,7 @@ def make_client() -> Client:
         "claw_session",
         api_id=config.TELEGRAM_API_ID,
         api_hash=config.TELEGRAM_API_HASH,
+        session_string=config.TELEGRAM_SESSION_STRING or None,
     )
 
 
@@ -30,11 +31,14 @@ def _to_signal(message: Message) -> Signal:
 async def telegram_collector_node(state: State) -> dict:
     try:
         async with make_client() as client:
-            messages = await client.get_chat_history(
-                config.TELEGRAM_CHANNEL_ID,
-                limit=100,
-                offset_id=state["telegram_offset_id"],
-            )
+            await client.get_chat(config.TELEGRAM_CHANNEL_ID)
+            messages = [
+                m async for m in client.get_chat_history(
+                    config.TELEGRAM_CHANNEL_ID,
+                    limit=100,
+                    offset_id=state["telegram_offset_id"],
+                )
+            ]
         # pyrogram returns messages in descending order (newest first); messages[0] has the highest ID
         if not messages:
             return {}
@@ -44,6 +48,7 @@ async def telegram_collector_node(state: State) -> dict:
         }
     except Exception as exc:
         log.error(f"Telegram collector failed: {exc}", exc_info=True)
+
         return {
             "signals": [Signal(
                 title="Telegram collector failed",

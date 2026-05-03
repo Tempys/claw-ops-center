@@ -11,8 +11,13 @@ STATE = {
 async def test_returns_signals_and_updates_offset():
     msg1 = MagicMock(id=200, text="Urgent: BTC liquidations spike", caption=None)
     msg2 = MagicMock(id=150, text="Weekly update published", caption=None)
+
+    async def fake_history(*_a, **_kw):
+        for m in [msg1, msg2]:
+            yield m
+
     mock_client = AsyncMock()
-    mock_client.get_chat_history = AsyncMock(return_value=[msg1, msg2])
+    mock_client.get_chat_history = fake_history
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
@@ -27,8 +32,12 @@ async def test_returns_signals_and_updates_offset():
 
 
 async def test_returns_empty_dict_when_no_messages():
+    async def fake_history(*_a, **_kw):
+        return
+        yield
+
     mock_client = AsyncMock()
-    mock_client.get_chat_history = AsyncMock(return_value=[])
+    mock_client.get_chat_history = fake_history
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
@@ -40,8 +49,12 @@ async def test_returns_empty_dict_when_no_messages():
 
 
 async def test_returns_error_signal_and_preserves_offset_on_exception():
+    async def fake_history(*_a, **_kw):
+        raise Exception("connection refused")
+        yield
+
     mock_client = AsyncMock()
-    mock_client.get_chat_history = AsyncMock(side_effect=Exception("connection refused"))
+    mock_client.get_chat_history = fake_history
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 

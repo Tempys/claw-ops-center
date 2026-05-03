@@ -128,7 +128,7 @@ os.environ.setdefault("CHECKPOINT_DB_PATH", ":memory:")
 - [ ] **Step 7: Commit**
 
 ```bash
-git add .gitignore requirements.txt pytest.ini .env.example news/__init__.py news/nodes/__init__.py tests/__init__.py tests/conftest.py
+git add .gitignore requirements.txt pytest.ini .env news/__init__.py news/nodes/__init__.py tests/__init__.py tests/conftest.py
 git commit -m "feat: scaffold project structure"
 ```
 

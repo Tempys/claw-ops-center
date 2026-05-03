@@ -1,11 +1,13 @@
 import asyncio
+asyncio.set_event_loop(asyncio.new_event_loop())  # pyrogram sync.py calls get_event_loop() at import time (Python 3.12+ no longer auto-creates one)
+
 import logging
 import time
 
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
 import news.config as config
-from news.graph import build_graph_builder
+from news.graph import create_graph
 from news.state import State
 
 logging.basicConfig(level=logging.INFO)
@@ -24,7 +26,7 @@ _INITIAL_STATE: State = {
 
 async def main() -> None:
     async with AsyncSqliteSaver.from_conn_string(config.CHECKPOINT_DB_PATH) as checkpointer:
-        graph = build_graph_builder().compile(checkpointer=checkpointer)
+        graph = create_graph().compile(checkpointer=checkpointer)
         try:
             await graph.ainvoke(_INITIAL_STATE, config=_RUN_CONFIG)
             log.info("Run completed successfully")
