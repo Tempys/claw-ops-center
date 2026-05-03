@@ -8,21 +8,23 @@ async def test_graph_builder_has_correct_nodes():
             builder = create_graph()
 
     assert "telegram_collector" in builder.nodes
-    assert "analyze_and_classify" in builder.nodes
+    assert "classify_and_filter" in builder.nodes
     assert "sender" in builder.nodes
+    assert "analyze_and_classify" not in builder.nodes
 
 
-async def test_full_graph_produces_analysis_from_telegram():
-    tg_signals = [{"title": "BTC up", "classification": "other", "summary": "Up 10%", "source": "telegram"}]
+async def test_full_graph_routes_dev_tool_signals_to_sender():
+    tg_signals = [{"title": "LangGraph", "classification": "other", "summary": "LangGraph news", "source": "telegram"}]
+    filtered = [{"title": "LangGraph", "classification": "ai_agent_framework", "summary": "LangGraph news", "source": "telegram"}]
 
     mock_tg = AsyncMock(return_value={"telegram_offset_id": 200, "signals": tg_signals})
-    mock_analyze = AsyncMock(return_value={"analysis": "Urgent: BTC up 10%"})
+    mock_classify = AsyncMock(return_value={"filtered_signals": filtered})
     mock_send = AsyncMock(return_value={})
 
     with patch("news.nodes.analyzer._client", AsyncMock()):
         with patch("news.nodes.sender._bot", AsyncMock()):
             with patch("news.graph.telegram_collector_node", mock_tg):
-                with patch("news.graph.analyze_and_classify_node", mock_analyze):
+                with patch("news.graph.classify_and_filter_node", mock_classify):
                     with patch("news.graph.sender_node", mock_send):
                         from langgraph.checkpoint.memory import MemorySaver
                         from news.graph import create_graph
@@ -32,14 +34,14 @@ async def test_full_graph_produces_analysis_from_telegram():
                             "telegram_offset_id": 0,
                             "email_last_checked": 0.0,
                             "signals": [],
-                            "analysis": "",
+                            "filtered_signals": [],
                         }
                         result = await graph.ainvoke(
                             initial,
                             config={"configurable": {"thread_id": "test"}},
                         )
 
-    assert result["analysis"] == "Urgent: BTC up 10%"
+    assert result["filtered_signals"] == filtered
     assert result["telegram_offset_id"] == 200
 
 

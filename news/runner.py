@@ -20,7 +20,7 @@ _INITIAL_STATE: State = {
     "telegram_offset_id": 0,
     "email_last_checked": time.time(),
     "signals": [],
-    "analysis": "",
+    "filtered_signals": [],
 }
 
 
