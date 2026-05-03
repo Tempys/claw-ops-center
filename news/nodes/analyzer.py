@@ -12,12 +12,13 @@ log = logging.getLogger(__name__)
 _client = openai.AsyncOpenAI(api_key=config.OPENAI_API_KEY)
 
 _VALID_CLASSIFICATIONS = set(get_args(CLASSIFICATION))
+_CLASSIFIABLE = _VALID_CLASSIFICATIONS - {"error"}
 
 _CLASSIFY_SYSTEM = (
     "You are a signal classifier. Given a numbered list of signals, return ONLY a JSON array — "
     "no prose, no markdown. Each element: {\"index\": <int>, \"classification\": <category>}. "
     "Valid categories: ai_agent_framework, llm_finetuning, skill_plugin_builder, code_generation, "
-    "dev_productivity, prompt_engineering, other, error."
+    "dev_productivity, prompt_engineering, other."
 )
 
 _DIGEST_SYSTEM = (
@@ -64,7 +65,7 @@ async def _classify_batch(signals: list[Signal]) -> list[Signal]:
     classified_non_error: list[Signal] = []
     for i, signal in enumerate(non_error, 1):
         raw_cls = index_map.get(i, "other")
-        cls = raw_cls if raw_cls in _VALID_CLASSIFICATIONS else "other"
+        cls = raw_cls if raw_cls in _CLASSIFIABLE else "other"
         classified_non_error.append({**signal, "classification": cls})
 
     ne_iter = iter(classified_non_error)

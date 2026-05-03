@@ -13,7 +13,7 @@ async def test_graph_builder_has_correct_nodes():
 
 
 async def test_full_graph_produces_analysis_from_telegram():
-    tg_signals = [{"title": "BTC up", "classification": "informational", "summary": "Up 10%", "source": "telegram"}]
+    tg_signals = [{"title": "BTC up", "classification": "other", "summary": "Up 10%", "source": "telegram"}]
 
     mock_tg = AsyncMock(return_value={"telegram_offset_id": 200, "signals": tg_signals})
     mock_analyze = AsyncMock(return_value={"analysis": "Urgent: BTC up 10%"})

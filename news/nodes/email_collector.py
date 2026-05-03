@@ -60,7 +60,7 @@ async def email_collector_node(state: State) -> dict:
         signals = [
             Signal(
                 title=e["subject"] or "(no subject)",
-                classification="informational",
+                classification="other",
                 summary=e["body"],
                 source="email",
             )
