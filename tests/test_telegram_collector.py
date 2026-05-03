@@ -4,7 +4,7 @@ STATE = {
     "telegram_offset_id": 100,
     "email_last_checked": 0.0,
     "signals": [],
-    "analysis": "",
+    "filtered_signals": [],
 }
 
 
