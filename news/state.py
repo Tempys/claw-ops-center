@@ -26,4 +26,4 @@ class State(TypedDict):
     telegram_offset_id: int
     email_last_checked: float
     signals: Annotated[list[Signal], operator.add]
-    analysis: str
+    filtered_signals: list[Signal]

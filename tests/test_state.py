@@ -49,7 +49,8 @@ def test_state_has_required_fields():
     assert "telegram_offset_id" in hints
     assert "email_last_checked" in hints
     assert "signals" in hints
-    assert "analysis" in hints
+    assert "filtered_signals" in hints
+    assert "analysis" not in hints
 
 
 def test_signals_reducer_merges_lists():
