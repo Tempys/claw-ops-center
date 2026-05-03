@@ -38,16 +38,17 @@ def _format_signals(signals: list[Signal]) -> str:
 
 
 async def _classify_batch(signals: list[Signal]) -> list[Signal]:
-    if all(s["classification"] == "error" for s in signals):
+    non_error = [s for s in signals if s["classification"] != "error"]
+    if not non_error:
         return signals
 
     try:
         response = await _client.chat.completions.create(
             model="gpt-4o-mini",
-            max_tokens=256,
+            max_tokens=512,
             messages=[
                 {"role": "system", "content": _CLASSIFY_SYSTEM},
-                {"role": "user", "content": _format_signals(signals)},
+                {"role": "user", "content": _format_signals(non_error)},
             ],
         )
         items = json.loads(response.choices[0].message.content)
@@ -60,15 +61,14 @@ async def _classify_batch(signals: list[Signal]) -> list[Signal]:
         log.warning("Classify pass failed, falling back to 'other'", exc_info=True)
         index_map = {}
 
-    result = []
-    for i, signal in enumerate(signals, 1):
-        if signal["classification"] == "error":
-            result.append(signal)
-            continue
+    classified_non_error: list[Signal] = []
+    for i, signal in enumerate(non_error, 1):
         raw_cls = index_map.get(i, "other")
         cls = raw_cls if raw_cls in _VALID_CLASSIFICATIONS else "other"
-        result.append({**signal, "classification": cls})
-    return result
+        classified_non_error.append({**signal, "classification": cls})
+
+    ne_iter = iter(classified_non_error)
+    return [next(ne_iter) if s["classification"] != "error" else s for s in signals]
 
 
 async def analyze_and_classify_node(state: State) -> dict:
