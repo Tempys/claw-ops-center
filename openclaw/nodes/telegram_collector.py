@@ -1,7 +1,12 @@
+import logging
+
 from pyrogram import Client
+from pyrogram.types import Message
 
 import openclaw.config as config
 from openclaw.state import Signal, State
+
+log = logging.getLogger(__name__)
 
 
 def make_client() -> Client:
@@ -12,7 +17,7 @@ def make_client() -> Client:
     )
 
 
-def _to_signal(message) -> Signal:
+def _to_signal(message: Message) -> Signal:
     text = message.text or message.caption or ""
     return Signal(
         title=text[:80],
@@ -30,6 +35,7 @@ async def telegram_collector_node(state: State) -> dict:
                 limit=100,
                 offset_id=state["telegram_offset_id"],
             )
+        # pyrogram returns messages in descending order (newest first); messages[0] has the highest ID
         if not messages:
             return {}
         return {
@@ -37,6 +43,7 @@ async def telegram_collector_node(state: State) -> dict:
             "signals": [_to_signal(m) for m in messages],
         }
     except Exception as exc:
+        log.error(f"Telegram collector failed: {exc}", exc_info=True)
         return {
             "signals": [Signal(
                 title="Telegram collector failed",
