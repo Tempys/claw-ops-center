@@ -16,8 +16,8 @@ async def test_returns_signals_and_updates_offset():
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
-    with patch("openclaw.nodes.telegram_collector.make_client", return_value=mock_client):
-        from openclaw.nodes.telegram_collector import telegram_collector_node
+    with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
+        from news.nodes.telegram_collector import telegram_collector_node
         result = await telegram_collector_node(STATE)
 
     assert result["telegram_offset_id"] == 200
@@ -32,8 +32,8 @@ async def test_returns_empty_dict_when_no_messages():
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
-    with patch("openclaw.nodes.telegram_collector.make_client", return_value=mock_client):
-        from openclaw.nodes.telegram_collector import telegram_collector_node
+    with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
+        from news.nodes.telegram_collector import telegram_collector_node
         result = await telegram_collector_node(STATE)
 
     assert result == {}
@@ -45,8 +45,8 @@ async def test_returns_error_signal_and_preserves_offset_on_exception():
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
-    with patch("openclaw.nodes.telegram_collector.make_client", return_value=mock_client):
-        from openclaw.nodes.telegram_collector import telegram_collector_node
+    with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
+        from news.nodes.telegram_collector import telegram_collector_node
         result = await telegram_collector_node(STATE)
 
     assert "telegram_offset_id" not in result

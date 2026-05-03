@@ -12,9 +12,9 @@ async def test_sends_analysis_to_destination_chat():
     mock_bot = AsyncMock()
     mock_bot.send_message = AsyncMock()
 
-    with patch("openclaw.nodes.sender._bot", mock_bot):
-        from openclaw.nodes.sender import sender_node
-        import openclaw.config as config
+    with patch("news.nodes.sender._bot", mock_bot):
+        from news.nodes.sender import sender_node
+        import news.config as config
         result = await sender_node(STATE)
 
     mock_bot.send_message.assert_called_once_with(
@@ -28,8 +28,8 @@ async def test_returns_empty_dict():
     mock_bot = AsyncMock()
     mock_bot.send_message = AsyncMock()
 
-    with patch("openclaw.nodes.sender._bot", mock_bot):
-        from openclaw.nodes.sender import sender_node
+    with patch("news.nodes.sender._bot", mock_bot):
+        from news.nodes.sender import sender_node
         result = await sender_node(STATE)
 
     assert result == {}

@@ -3,8 +3,8 @@ import logging
 from pyrogram import Client
 from pyrogram.types import Message
 
-import openclaw.config as config
-from openclaw.state import Signal, State
+import news.config as config
+from news.state import Signal, State
 
 log = logging.getLogger(__name__)
 

@@ -13,10 +13,10 @@ async def test_returns_signals_and_updates_timestamp():
         {"subject": "Market Alert", "body": "BTC up 10%", "sender": "alerts@example.com"},
         {"subject": "Weekly Digest", "body": "Top stories", "sender": "digest@example.com"},
     ]
-    with patch("openclaw.nodes.email_collector.fetch_emails_since", return_value=fake_emails):
-        with patch("openclaw.nodes.email_collector.time") as mock_time:
+    with patch("news.nodes.email_collector.fetch_emails_since", return_value=fake_emails):
+        with patch("news.nodes.email_collector.time") as mock_time:
             mock_time.time.return_value = 9999.0
-            from openclaw.nodes.email_collector import email_collector_node
+            from news.nodes.email_collector import email_collector_node
             result = await email_collector_node(STATE)
 
     assert result["email_last_checked"] == 9999.0
@@ -27,10 +27,10 @@ async def test_returns_signals_and_updates_timestamp():
 
 
 async def test_returns_empty_signals_when_no_emails():
-    with patch("openclaw.nodes.email_collector.fetch_emails_since", return_value=[]):
-        with patch("openclaw.nodes.email_collector.time") as mock_time:
+    with patch("news.nodes.email_collector.fetch_emails_since", return_value=[]):
+        with patch("news.nodes.email_collector.time") as mock_time:
             mock_time.time.return_value = 9999.0
-            from openclaw.nodes.email_collector import email_collector_node
+            from news.nodes.email_collector import email_collector_node
             result = await email_collector_node(STATE)
 
     assert result["email_last_checked"] == 9999.0
@@ -38,8 +38,8 @@ async def test_returns_empty_signals_when_no_emails():
 
 
 async def test_returns_error_signal_and_preserves_timestamp_on_exception():
-    with patch("openclaw.nodes.email_collector.fetch_emails_since", side_effect=Exception("IMAP auth failed")):
-        from openclaw.nodes.email_collector import email_collector_node
+    with patch("news.nodes.email_collector.fetch_emails_since", side_effect=Exception("IMAP auth failed")):
+        from news.nodes.email_collector import email_collector_node
         result = await email_collector_node(STATE)
 
     assert "email_last_checked" not in result

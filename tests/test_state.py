@@ -3,7 +3,7 @@ from typing import get_type_hints
 
 
 def test_signal_fields():
-    from openclaw.state import Signal
+    from news.state import Signal
     s: Signal = {
         "title": "BTC surge",
         "classification": "urgent",
@@ -17,7 +17,7 @@ def test_signal_fields():
 
 
 def test_state_has_required_fields():
-    from openclaw.state import State
+    from news.state import State
     hints = get_type_hints(State, include_extras=True)
     assert "telegram_offset_id" in hints
     assert "email_last_checked" in hints

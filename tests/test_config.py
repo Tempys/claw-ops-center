@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 
 def test_config_reads_all_env_vars():
-    import openclaw.config as cfg
+    import news.config as cfg
     importlib.reload(cfg)
     assert cfg.TELEGRAM_API_ID == 12345678
     assert cfg.TELEGRAM_API_HASH == "test_hash"
@@ -22,7 +22,7 @@ def test_config_default_checkpoint_path():
     env = dict(os.environ)
     env.pop("CHECKPOINT_DB_PATH", None)
     with patch.dict(os.environ, env, clear=True):
-        import openclaw.config as cfg
+        import news.config as cfg
         importlib.reload(cfg)
         assert cfg.CHECKPOINT_DB_PATH == "checkpoints.db"
 
@@ -30,7 +30,7 @@ def test_config_default_checkpoint_path():
 def test_missing_required_var_raises():
     env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
     with patch.dict(os.environ, env, clear=True):
-        import openclaw.config as cfg
+        import news.config as cfg
         import pytest
         with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
             importlib.reload(cfg)

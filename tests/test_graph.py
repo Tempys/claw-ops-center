@@ -2,9 +2,9 @@ from unittest.mock import AsyncMock, patch
 
 
 async def test_graph_builder_has_correct_nodes():
-    with patch("openclaw.nodes.analyzer._client", AsyncMock()):
-        with patch("openclaw.nodes.sender._bot", AsyncMock()):
-            from openclaw.graph import build_graph_builder
+    with patch("news.nodes.analyzer._client", AsyncMock()):
+        with patch("news.nodes.sender._bot", AsyncMock()):
+            from news.graph import build_graph_builder
             builder = build_graph_builder()
 
     assert "telegram_collector" in builder.nodes
@@ -22,14 +22,14 @@ async def test_full_graph_produces_analysis_from_both_sources():
     mock_analyze = AsyncMock(return_value={"analysis": "Urgent: BTC up 10%"})
     mock_send = AsyncMock(return_value={})
 
-    with patch("openclaw.nodes.analyzer._client", AsyncMock()):
-        with patch("openclaw.nodes.sender._bot", AsyncMock()):
-            with patch("openclaw.graph.telegram_collector_node", mock_tg):
-                with patch("openclaw.graph.email_collector_node", mock_em):
-                    with patch("openclaw.graph.analyze_and_classify_node", mock_analyze):
-                        with patch("openclaw.graph.sender_node", mock_send):
+    with patch("news.nodes.analyzer._client", AsyncMock()):
+        with patch("news.nodes.sender._bot", AsyncMock()):
+            with patch("news.graph.telegram_collector_node", mock_tg):
+                with patch("news.graph.email_collector_node", mock_em):
+                    with patch("news.graph.analyze_and_classify_node", mock_analyze):
+                        with patch("news.graph.sender_node", mock_send):
                             from langgraph.checkpoint.memory import MemorySaver
-                            from openclaw.graph import build_graph_builder
+                            from news.graph import build_graph_builder
 
                             graph = build_graph_builder().compile(checkpointer=MemorySaver())
                             initial = {

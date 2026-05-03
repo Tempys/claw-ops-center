@@ -17,8 +17,8 @@ async def test_returns_llm_analysis_text():
     mock_client = AsyncMock()
     mock_client.messages.create = AsyncMock(return_value=mock_response)
 
-    with patch("openclaw.nodes.analyzer._client", mock_client):
-        from openclaw.nodes.analyzer import analyze_and_classify_node
+    with patch("news.nodes.analyzer._client", mock_client):
+        from news.nodes.analyzer import analyze_and_classify_node
         result = await analyze_and_classify_node(STATE)
 
     assert result["analysis"] == "URGENT: BTC up 15%. VIX spike warrants monitoring."
@@ -30,8 +30,8 @@ async def test_prompt_includes_all_signals():
     mock_client = AsyncMock()
     mock_client.messages.create = AsyncMock(return_value=mock_response)
 
-    with patch("openclaw.nodes.analyzer._client", mock_client):
-        from openclaw.nodes.analyzer import analyze_and_classify_node
+    with patch("news.nodes.analyzer._client", mock_client):
+        from news.nodes.analyzer import analyze_and_classify_node
         await analyze_and_classify_node(STATE)
 
     call_kwargs = mock_client.messages.create.call_args.kwargs

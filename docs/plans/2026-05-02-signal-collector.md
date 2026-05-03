@@ -128,7 +128,7 @@ os.environ.setdefault("CHECKPOINT_DB_PATH", ":memory:")
 - [ ] **Step 7: Commit**
 
 ```bash
-git add .gitignore requirements.txt pytest.ini .env.example openclaw/__init__.py openclaw/nodes/__init__.py tests/__init__.py tests/conftest.py
+git add .gitignore requirements.txt pytest.ini .env.example news/__init__.py news/nodes/__init__.py tests/__init__.py tests/conftest.py
 git commit -m "feat: scaffold project structure"
 ```
 
@@ -143,13 +143,14 @@ git commit -m "feat: scaffold project structure"
 - [ ] **Step 1: Write failing tests**
 
 `tests/test_state.py`:
+
 ```python
 import operator
 from typing import get_type_hints
 
 
 def test_signal_fields():
-    from openclaw.state import Signal
+    from news.state import Signal
     s: Signal = {
         "title": "BTC surge",
         "classification": "urgent",
@@ -163,7 +164,7 @@ def test_signal_fields():
 
 
 def test_state_has_required_fields():
-    from openclaw.state import State
+    from news.state import State
     hints = get_type_hints(State, include_extras=True)
     assert "telegram_offset_id" in hints
     assert "email_last_checked" in hints
@@ -221,7 +222,7 @@ Expected: `3 passed`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add openclaw/state.py tests/test_state.py
+git add news/state.py tests/test_state.py
 git commit -m "feat: add State and Signal schema"
 ```
 
@@ -236,6 +237,7 @@ git commit -m "feat: add State and Signal schema"
 - [ ] **Step 1: Write failing tests**
 
 `tests/test_config.py`:
+
 ```python
 import importlib
 import os
@@ -243,7 +245,7 @@ from unittest.mock import patch
 
 
 def test_config_reads_all_env_vars():
-    import openclaw.config as cfg
+    import news.config as cfg
     importlib.reload(cfg)
     assert cfg.TELEGRAM_API_ID == 12345678
     assert cfg.TELEGRAM_API_HASH == "test_hash"
@@ -261,7 +263,7 @@ def test_config_default_checkpoint_path():
     env = dict(os.environ)
     env.pop("CHECKPOINT_DB_PATH", None)
     with patch.dict(os.environ, env, clear=True):
-        import openclaw.config as cfg
+        import news.config as cfg
         importlib.reload(cfg)
         assert cfg.CHECKPOINT_DB_PATH == "checkpoints.db"
 
@@ -269,7 +271,7 @@ def test_config_default_checkpoint_path():
 def test_missing_required_var_raises():
     env = {k: v for k, v in os.environ.items() if k != "ANTHROPIC_API_KEY"}
     with patch.dict(os.environ, env, clear=True):
-        import openclaw.config as cfg
+        import news.config as cfg
         import pytest
         with pytest.raises(ValueError, match="ANTHROPIC_API_KEY"):
             importlib.reload(cfg)
@@ -322,7 +324,7 @@ Expected: `3 passed`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add openclaw/config.py tests/test_config.py
+git add news/config.py tests/test_config.py
 git commit -m "feat: add config module"
 ```
 
@@ -337,6 +339,7 @@ git commit -m "feat: add config module"
 - [ ] **Step 1: Write failing tests**
 
 `tests/test_telegram_collector.py`:
+
 ```python
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -356,8 +359,8 @@ async def test_returns_signals_and_updates_offset():
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
-    with patch("openclaw.nodes.telegram_collector.make_client", return_value=mock_client):
-        from openclaw.nodes.telegram_collector import telegram_collector_node
+    with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
+        from news.nodes.telegram_collector import telegram_collector_node
         result = await telegram_collector_node(STATE)
 
     assert result["telegram_offset_id"] == 200
@@ -372,8 +375,8 @@ async def test_returns_empty_dict_when_no_messages():
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
-    with patch("openclaw.nodes.telegram_collector.make_client", return_value=mock_client):
-        from openclaw.nodes.telegram_collector import telegram_collector_node
+    with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
+        from news.nodes.telegram_collector import telegram_collector_node
         result = await telegram_collector_node(STATE)
 
     assert result == {}
@@ -385,8 +388,8 @@ async def test_returns_error_signal_and_preserves_offset_on_exception():
     mock_client.__aenter__ = AsyncMock(return_value=mock_client)
     mock_client.__aexit__ = AsyncMock(return_value=False)
 
-    with patch("openclaw.nodes.telegram_collector.make_client", return_value=mock_client):
-        from openclaw.nodes.telegram_collector import telegram_collector_node
+    with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
+        from news.nodes.telegram_collector import telegram_collector_node
         result = await telegram_collector_node(STATE)
 
     assert "telegram_offset_id" not in result
@@ -406,11 +409,12 @@ Expected: `ModuleNotFoundError: No module named 'openclaw.nodes.telegram_collect
 - [ ] **Step 3: Implement telegram_collector.py**
 
 `openclaw/nodes/telegram_collector.py`:
+
 ```python
 from pyrogram import Client
 
-import openclaw.config as config
-from openclaw.state import Signal, State
+import news.config as config
+from news.state import Signal, State
 
 
 def make_client() -> Client:
@@ -466,7 +470,7 @@ Expected: `3 passed`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add openclaw/nodes/telegram_collector.py tests/test_telegram_collector.py
+git add news/nodes/telegram_collector.py tests/test_telegram_collector.py
 git commit -m "feat: add telegram collector node"
 ```
 
@@ -481,6 +485,7 @@ git commit -m "feat: add telegram collector node"
 - [ ] **Step 1: Write failing tests**
 
 `tests/test_email_collector.py`:
+
 ```python
 from unittest.mock import patch
 
@@ -497,10 +502,10 @@ async def test_returns_signals_and_updates_timestamp():
         {"subject": "Market Alert", "body": "BTC up 10%", "sender": "alerts@example.com"},
         {"subject": "Weekly Digest", "body": "Top stories", "sender": "digest@example.com"},
     ]
-    with patch("openclaw.nodes.email_collector.fetch_emails_since", return_value=fake_emails):
-        with patch("openclaw.nodes.email_collector.time") as mock_time:
+    with patch("news.nodes.email_collector.fetch_emails_since", return_value=fake_emails):
+        with patch("news.nodes.email_collector.time") as mock_time:
             mock_time.time.return_value = 9999.0
-            from openclaw.nodes.email_collector import email_collector_node
+            from news.nodes.email_collector import email_collector_node
             result = await email_collector_node(STATE)
 
     assert result["email_last_checked"] == 9999.0
@@ -511,10 +516,10 @@ async def test_returns_signals_and_updates_timestamp():
 
 
 async def test_returns_empty_signals_when_no_emails():
-    with patch("openclaw.nodes.email_collector.fetch_emails_since", return_value=[]):
-        with patch("openclaw.nodes.email_collector.time") as mock_time:
+    with patch("news.nodes.email_collector.fetch_emails_since", return_value=[]):
+        with patch("news.nodes.email_collector.time") as mock_time:
             mock_time.time.return_value = 9999.0
-            from openclaw.nodes.email_collector import email_collector_node
+            from news.nodes.email_collector import email_collector_node
             result = await email_collector_node(STATE)
 
     assert result["email_last_checked"] == 9999.0
@@ -522,8 +527,8 @@ async def test_returns_empty_signals_when_no_emails():
 
 
 async def test_returns_error_signal_and_preserves_timestamp_on_exception():
-    with patch("openclaw.nodes.email_collector.fetch_emails_since", side_effect=Exception("IMAP auth failed")):
-        from openclaw.nodes.email_collector import email_collector_node
+    with patch("news.nodes.email_collector.fetch_emails_since", side_effect=Exception("IMAP auth failed")):
+        from news.nodes.email_collector import email_collector_node
         result = await email_collector_node(STATE)
 
     assert "email_last_checked" not in result
@@ -543,6 +548,7 @@ Expected: `ModuleNotFoundError: No module named 'openclaw.nodes.email_collector'
 - [ ] **Step 3: Implement email_collector.py**
 
 `openclaw/nodes/email_collector.py`:
+
 ```python
 import asyncio
 import email
@@ -551,8 +557,8 @@ import time
 from datetime import datetime
 from email.header import decode_header as _raw_decode
 
-import openclaw.config as config
-from openclaw.state import Signal, State
+import news.config as config
+from news.state import Signal, State
 
 
 def _decode(value) -> str:
@@ -631,7 +637,7 @@ Expected: `3 passed`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add openclaw/nodes/email_collector.py tests/test_email_collector.py
+git add news/nodes/email_collector.py tests/test_email_collector.py
 git commit -m "feat: add email collector node"
 ```
 
@@ -646,6 +652,7 @@ git commit -m "feat: add email collector node"
 - [ ] **Step 1: Write failing tests**
 
 `tests/test_analyzer.py`:
+
 ```python
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -666,8 +673,8 @@ async def test_returns_llm_analysis_text():
     mock_client = AsyncMock()
     mock_client.messages.create = AsyncMock(return_value=mock_response)
 
-    with patch("openclaw.nodes.analyzer._client", mock_client):
-        from openclaw.nodes.analyzer import analyze_and_classify_node
+    with patch("news.nodes.analyzer._client", mock_client):
+        from news.nodes.analyzer import analyze_and_classify_node
         result = await analyze_and_classify_node(STATE)
 
     assert result["analysis"] == "URGENT: BTC up 15%. VIX spike warrants monitoring."
@@ -679,8 +686,8 @@ async def test_prompt_includes_all_signals():
     mock_client = AsyncMock()
     mock_client.messages.create = AsyncMock(return_value=mock_response)
 
-    with patch("openclaw.nodes.analyzer._client", mock_client):
-        from openclaw.nodes.analyzer import analyze_and_classify_node
+    with patch("news.nodes.analyzer._client", mock_client):
+        from news.nodes.analyzer import analyze_and_classify_node
         await analyze_and_classify_node(STATE)
 
     call_kwargs = mock_client.messages.create.call_args.kwargs
@@ -701,11 +708,12 @@ Expected: `ModuleNotFoundError: No module named 'openclaw.nodes.analyzer'`
 - [ ] **Step 3: Implement analyzer.py**
 
 `openclaw/nodes/analyzer.py`:
+
 ```python
 import anthropic
 
-import openclaw.config as config
-from openclaw.state import Signal, State
+import news.config as config
+from news.state import Signal, State
 
 _client = anthropic.AsyncAnthropic(api_key=config.ANTHROPIC_API_KEY)
 
@@ -743,7 +751,7 @@ Expected: `2 passed`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add openclaw/nodes/analyzer.py tests/test_analyzer.py
+git add news/nodes/analyzer.py tests/test_analyzer.py
 git commit -m "feat: add LLM analyzer node"
 ```
 
@@ -758,6 +766,7 @@ git commit -m "feat: add LLM analyzer node"
 - [ ] **Step 1: Write failing tests**
 
 `tests/test_sender.py`:
+
 ```python
 from unittest.mock import AsyncMock, patch
 
@@ -773,9 +782,9 @@ async def test_sends_analysis_to_destination_chat():
     mock_bot = AsyncMock()
     mock_bot.send_message = AsyncMock()
 
-    with patch("openclaw.nodes.sender._bot", mock_bot):
-        from openclaw.nodes.sender import sender_node
-        import openclaw.config as config
+    with patch("news.nodes.sender._bot", mock_bot):
+        from news.nodes.sender import sender_node
+        import news.config as config
         result = await sender_node(STATE)
 
     mock_bot.send_message.assert_called_once_with(
@@ -789,8 +798,8 @@ async def test_returns_empty_dict():
     mock_bot = AsyncMock()
     mock_bot.send_message = AsyncMock()
 
-    with patch("openclaw.nodes.sender._bot", mock_bot):
-        from openclaw.nodes.sender import sender_node
+    with patch("news.nodes.sender._bot", mock_bot):
+        from news.nodes.sender import sender_node
         result = await sender_node(STATE)
 
     assert result == {}
@@ -806,11 +815,12 @@ Expected: `ModuleNotFoundError: No module named 'openclaw.nodes.sender'`
 - [ ] **Step 3: Implement sender.py**
 
 `openclaw/nodes/sender.py`:
+
 ```python
 from telegram import Bot
 
-import openclaw.config as config
-from openclaw.state import State
+import news.config as config
+from news.state import State
 
 _bot = Bot(token=config.TELEGRAM_BOT_TOKEN)
 
@@ -833,7 +843,7 @@ Expected: `2 passed`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add openclaw/nodes/sender.py tests/test_sender.py
+git add news/nodes/sender.py tests/test_sender.py
 git commit -m "feat: add sender node"
 ```
 
@@ -848,14 +858,15 @@ git commit -m "feat: add sender node"
 - [ ] **Step 1: Write failing tests**
 
 `tests/test_graph.py`:
+
 ```python
 from unittest.mock import AsyncMock, patch
 
 
 def test_graph_builder_has_correct_nodes():
-    with patch("openclaw.nodes.analyzer._client", AsyncMock()):
-        with patch("openclaw.nodes.sender._bot", AsyncMock()):
-            from openclaw.graph import build_graph_builder
+    with patch("news.nodes.analyzer._client", AsyncMock()):
+        with patch("news.nodes.sender._bot", AsyncMock()):
+            from news.graph import build_graph_builder
             builder = build_graph_builder()
 
     assert "telegram_collector" in builder.nodes
@@ -873,14 +884,14 @@ async def test_full_graph_produces_analysis_from_both_sources():
     mock_analyze = AsyncMock(return_value={"analysis": "Urgent: BTC up 10%"})
     mock_send = AsyncMock(return_value={})
 
-    with patch("openclaw.nodes.telegram_collector.telegram_collector_node", mock_tg):
-        with patch("openclaw.nodes.email_collector.email_collector_node", mock_em):
-            with patch("openclaw.nodes.analyzer.analyze_and_classify_node", mock_analyze):
-                with patch("openclaw.nodes.sender.sender_node", mock_send):
-                    with patch("openclaw.nodes.analyzer._client", AsyncMock()):
-                        with patch("openclaw.nodes.sender._bot", AsyncMock()):
+    with patch("news.nodes.telegram_collector.telegram_collector_node", mock_tg):
+        with patch("news.nodes.email_collector.email_collector_node", mock_em):
+            with patch("news.nodes.analyzer.analyze_and_classify_node", mock_analyze):
+                with patch("news.nodes.sender.sender_node", mock_send):
+                    with patch("news.nodes.analyzer._client", AsyncMock()):
+                        with patch("news.nodes.sender._bot", AsyncMock()):
                             from langgraph.checkpoint.memory import MemorySaver
-                            from openclaw.graph import build_graph_builder
+                            from news.graph import build_graph_builder
 
                             graph = build_graph_builder().compile(checkpointer=MemorySaver())
                             initial = {
@@ -909,14 +920,15 @@ Expected: `ModuleNotFoundError: No module named 'openclaw.graph'`
 - [ ] **Step 3: Implement graph.py**
 
 `openclaw/graph.py`:
+
 ```python
 from langgraph.graph import END, START, StateGraph
 
-from openclaw.nodes.analyzer import analyze_and_classify_node
-from openclaw.nodes.email_collector import email_collector_node
-from openclaw.nodes.sender import sender_node
-from openclaw.nodes.telegram_collector import telegram_collector_node
-from openclaw.state import State
+from news.nodes.analyzer import analyze_and_classify_node
+from news.nodes.email_collector import email_collector_node
+from news.nodes.sender import sender_node
+from news.nodes.telegram_collector import telegram_collector_node
+from news.state import State
 
 
 def build_graph_builder() -> StateGraph:
@@ -947,7 +959,7 @@ Expected: `2 passed`
 - [ ] **Step 5: Commit**
 
 ```bash
-git add openclaw/graph.py tests/test_graph.py
+git add news/graph.py tests/test_graph.py
 git commit -m "feat: add graph builder"
 ```
 
@@ -961,15 +973,16 @@ git commit -m "feat: add graph builder"
 - [ ] **Step 1: Implement runner.py**
 
 `openclaw/runner.py`:
+
 ```python
 import asyncio
 import logging
 
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
-import openclaw.config as config
-from openclaw.graph import build_graph_builder
-from openclaw.state import State
+import news.config as config
+from news.graph import build_graph_builder
+from news.state import State
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -1016,6 +1029,6 @@ Expected: all tests pass
 - [ ] **Step 4: Commit**
 
 ```bash
-git add openclaw/runner.py
+git add news/runner.py
 git commit -m "feat: add cron runner entrypoint"
 ```

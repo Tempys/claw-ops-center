@@ -1,10 +1,10 @@
 from langgraph.graph import END, START, StateGraph
 
-from openclaw.nodes.analyzer import analyze_and_classify_node
-from openclaw.nodes.email_collector import email_collector_node
-from openclaw.nodes.sender import sender_node
-from openclaw.nodes.telegram_collector import telegram_collector_node
-from openclaw.state import State
+from news.nodes.analyzer import analyze_and_classify_node
+from news.nodes.email_collector import email_collector_node
+from news.nodes.sender import sender_node
+from news.nodes.telegram_collector import telegram_collector_node
+from news.state import State
 
 
 def build_graph_builder() -> StateGraph:

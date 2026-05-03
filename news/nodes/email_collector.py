@@ -6,8 +6,8 @@ import time
 from datetime import datetime
 from email.header import decode_header as _raw_decode
 
-import openclaw.config as config
-from openclaw.state import Signal, State
+import news.config as config
+from news.state import Signal, State
 
 log = logging.getLogger(__name__)
 

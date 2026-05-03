@@ -4,9 +4,9 @@ import time
 
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
-import openclaw.config as config
-from openclaw.graph import build_graph_builder
-from openclaw.state import State
+import news.config as config
+from news.graph import build_graph_builder
+from news.state import State
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)

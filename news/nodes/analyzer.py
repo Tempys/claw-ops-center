@@ -1,8 +1,8 @@
 import anthropic
 import logging
 
-import openclaw.config as config
-from openclaw.state import Signal, State
+import news.config as config
+from news.state import Signal, State
 
 log = logging.getLogger(__name__)
 

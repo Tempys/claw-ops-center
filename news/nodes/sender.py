@@ -2,8 +2,8 @@ import logging
 
 from telegram import Bot
 
-import openclaw.config as config
-from openclaw.state import State
+import news.config as config
+from news.state import State
 
 log = logging.getLogger(__name__)
 
