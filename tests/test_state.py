@@ -79,4 +79,4 @@ def test_seen_hashes_reducer_deduplicates():
     hints = get_type_hints(state_module.State, include_extras=True)
     annotation = hints["telegram_seen_hashes"]
     reducer = get_args(annotation)[1]
-    assert sorted(reducer(["a", "b"], ["b", "c"])) == ["a", "b", "c"]
+    assert reducer(["a", "b"], ["b", "c"]) == ["a", "b", "c"]
