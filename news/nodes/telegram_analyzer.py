@@ -18,7 +18,7 @@ _BATCH_SIZE = 10
 async def telegram_analyze_node(state: State) -> dict:
     signals = state["telegram_raw_signals"][:_BATCH_SIZE]
     classified: list[Signal] = []
-    for i in range(0, len(signals), 5):
+    for i in range(0, len(signals), 5):  # 5 signals per LLM call to stay within token budget
         classified.extend(await _classify_batch(signals[i : i + 5], _TELEGRAM_SYSTEM))
     filtered = [s for s in classified if s["classification"] not in {"other", "error"}]
     return {"filtered_signals": filtered}
