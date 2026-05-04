@@ -1,5 +1,4 @@
 # tests/test_telegram_dedup.py
-import pytest
 from news.nodes.telegram_dedup import telegram_dedup_node
 
 
