@@ -1,3 +1,4 @@
+# news/runner.py
 import asyncio
 asyncio.set_event_loop(asyncio.new_event_loop())  # pyrogram sync.py calls get_event_loop() at import time (Python 3.12+ no longer auto-creates one)
 
@@ -15,11 +16,13 @@ log = logging.getLogger(__name__)
 
 _RUN_CONFIG = {"configurable": {"thread_id": "main"}}
 
-# email_last_checked initialised to now so the first run does not sweep all history
 _INITIAL_STATE: State = {
     "telegram_offset_id": 0,
+    "telegram_raw_signals": [],
+    "telegram_seen_hashes": [],
     "email_last_checked": time.time(),
-    "signals": [],
+    "email_raw_signals": [],
+    "email_seen_hashes": [],
     "filtered_signals": [],
 }
 
