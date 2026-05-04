@@ -43,20 +43,40 @@ def test_signal_fields():
     assert s["source"] == "telegram"
 
 
-def test_state_has_required_fields():
+def test_state_has_per_source_raw_signal_fields():
     from news.state import State
-    hints = get_type_hints(State, include_extras=True)
-    assert "telegram_offset_id" in hints
-    assert "email_last_checked" in hints
-    assert "signals" in hints
-    assert "filtered_signals" in hints
-    assert "analysis" not in hints
+    s: State = {
+        "telegram_offset_id": 0,
+        "telegram_raw_signals": [],
+        "telegram_seen_hashes": [],
+        "email_last_checked": 0.0,
+        "email_raw_signals": [],
+        "email_seen_hashes": [],
+        "filtered_signals": [],
+    }
+    assert s["telegram_raw_signals"] == []
+    assert s["email_raw_signals"] == []
+    assert s["telegram_seen_hashes"] == []
+    assert s["email_seen_hashes"] == []
 
 
-def test_signals_reducer_merges_lists():
-    a = [{"title": "A", "classification": "other", "summary": "a", "source": "telegram"}]
-    b = [{"title": "B", "classification": "other", "summary": "b", "source": "email"}]
-    merged = operator.add(a, b)
-    assert len(merged) == 2
-    assert merged[0]["source"] == "telegram"
-    assert merged[1]["source"] == "email"
+def test_filtered_signals_reducer_merges_two_lists():
+    import operator
+    from typing import get_type_hints, get_args
+    import news.state as state_module
+
+    hints = get_type_hints(state_module.State, include_extras=True)
+    annotation = hints["filtered_signals"]
+    # Annotated[list[Signal], operator.add] — second arg is the reducer
+    reducer = get_args(annotation)[1]
+    assert reducer([{"title": "a"}], [{"title": "b"}]) == [{"title": "a"}, {"title": "b"}]
+
+
+def test_seen_hashes_reducer_deduplicates():
+    import news.state as state_module
+    from typing import get_type_hints, get_args
+
+    hints = get_type_hints(state_module.State, include_extras=True)
+    annotation = hints["telegram_seen_hashes"]
+    reducer = get_args(annotation)[1]
+    assert sorted(reducer(["a", "b"], ["b", "c"])) == ["a", "b", "c"]
