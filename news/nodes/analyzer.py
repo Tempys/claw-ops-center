@@ -5,7 +5,7 @@ from typing import get_args
 import openai
 
 import news.config as config
-from news.state import CLASSIFICATION, Signal, State
+from news.state import CLASSIFICATION, Signal
 
 log = logging.getLogger(__name__)
 
@@ -13,13 +13,6 @@ _client = openai.AsyncOpenAI(api_key=config.OPENAI_API_KEY)
 
 _VALID_CLASSIFICATIONS = set(get_args(CLASSIFICATION))
 _CLASSIFIABLE = _VALID_CLASSIFICATIONS - {"error"}
-
-_CLASSIFY_SYSTEM = (
-    "You are a signal classifier. Given a numbered list of signals, return ONLY a JSON array — "
-    "no prose, no markdown. Each element: {\"index\": <int>, \"classification\": <category>}. "
-    "Valid categories: ai_agent_framework, llm_finetuning, skill_plugin_builder, code_generation, "
-    "dev_productivity, prompt_engineering, other."
-)
 
 
 def _format_signals(signals: list[Signal]) -> str:
@@ -31,7 +24,7 @@ def _format_signals(signals: list[Signal]) -> str:
     return "\n".join(lines)
 
 
-async def _classify_batch(signals: list[Signal]) -> list[Signal]:
+async def _classify_batch(signals: list[Signal], system_prompt: str) -> list[Signal]:
     non_error = [s for s in signals if s["classification"] != "error"]
     if not non_error:
         return signals
@@ -41,7 +34,7 @@ async def _classify_batch(signals: list[Signal]) -> list[Signal]:
             model="gpt-4o-mini",
             max_tokens=512,
             messages=[
-                {"role": "system", "content": _CLASSIFY_SYSTEM},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": _format_signals(non_error)},
             ],
         )
@@ -63,12 +56,3 @@ async def _classify_batch(signals: list[Signal]) -> list[Signal]:
 
     ne_iter = iter(classified_non_error)
     return [next(ne_iter) if s["classification"] != "error" else s for s in signals]
-
-
-async def classify_and_filter_node(state: State) -> dict:
-    signals = state["signals"][:5]
-    classified: list[Signal] = []
-    for i in range(0, len(signals), 5):
-        classified.extend(await _classify_batch(signals[i : i + 5]))
-    dev_tool = [s for s in classified if s["classification"] not in {"other", "error"}]
-    return {"filtered_signals": dev_tool}
