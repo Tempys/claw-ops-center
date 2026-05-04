@@ -45,13 +45,13 @@ async def telegram_collector_node(state: State) -> dict:
             return {}
         return {
             "telegram_offset_id": messages[0].id,
-            "signals": [_to_signal(m) for m in messages],
+            "telegram_raw_signals": [_to_signal(m) for m in messages],
         }
     except Exception as exc:
         log.error(f"Telegram collector failed: {exc}", exc_info=True)
 
         return {
-            "signals": [Signal(
+            "telegram_raw_signals": [Signal(
                 title="Telegram collector failed",
                 classification="error",
                 summary=str(exc),

@@ -67,6 +67,14 @@ async def test_telegram_collector_resolves_peer_before_fetching_history():
 
     with patch("news.nodes.telegram_collector.make_client", return_value=ctx):
         from news.nodes.telegram_collector import telegram_collector_node
-        await telegram_collector_node({"telegram_offset_id": 0, "signals": []})
+        await telegram_collector_node({
+            "telegram_offset_id": 0,
+            "telegram_raw_signals": [],
+            "telegram_seen_hashes": [],
+            "email_last_checked": 0.0,
+            "email_raw_signals": [],
+            "email_seen_hashes": [],
+            "filtered_signals": [],
+        })
 
     assert call_order == ["get_chat", "get_chat_history"]

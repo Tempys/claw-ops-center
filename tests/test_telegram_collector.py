@@ -2,8 +2,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 STATE = {
     "telegram_offset_id": 100,
+    "telegram_raw_signals": [],
+    "telegram_seen_hashes": [],
     "email_last_checked": 0.0,
-    "signals": [],
+    "email_raw_signals": [],
+    "email_seen_hashes": [],
     "filtered_signals": [],
 }
 
@@ -26,9 +29,9 @@ async def test_returns_signals_and_updates_offset():
         result = await telegram_collector_node(STATE)
 
     assert result["telegram_offset_id"] == 200
-    assert len(result["signals"]) == 2
-    assert result["signals"][0]["source"] == "telegram"
-    assert result["signals"][0]["title"] == "Urgent: BTC liquidations spike"
+    assert len(result["telegram_raw_signals"]) == 2
+    assert result["telegram_raw_signals"][0]["source"] == "telegram"
+    assert result["telegram_raw_signals"][0]["title"] == "Urgent: BTC liquidations spike"
 
 
 async def test_returns_empty_dict_when_no_messages():
@@ -63,10 +66,10 @@ async def test_returns_error_signal_and_preserves_offset_on_exception():
         result = await telegram_collector_node(STATE)
 
     assert "telegram_offset_id" not in result
-    assert len(result["signals"]) == 1
-    assert result["signals"][0]["classification"] == "error"
-    assert result["signals"][0]["source"] == "telegram"
-    assert "connection refused" in result["signals"][0]["summary"]
+    assert len(result["telegram_raw_signals"]) == 1
+    assert result["telegram_raw_signals"][0]["classification"] == "error"
+    assert result["telegram_raw_signals"][0]["source"] == "telegram"
+    assert "connection refused" in result["telegram_raw_signals"][0]["summary"]
 
 
 async def test_signal_default_classification_is_other():
@@ -84,4 +87,4 @@ async def test_signal_default_classification_is_other():
         from news.nodes.telegram_collector import telegram_collector_node
         result = await telegram_collector_node(STATE)
 
-    assert result["signals"][0]["classification"] == "other"
+    assert result["telegram_raw_signals"][0]["classification"] == "other"
