@@ -1,7 +1,9 @@
 import logging
+from typing import TYPE_CHECKING
 
-from pyrogram import Client
-from pyrogram.types import Message
+if TYPE_CHECKING:
+    from pyrogram import Client
+    from pyrogram.types import Message
 
 import news.config as config
 from news.state import Signal, State
@@ -9,7 +11,8 @@ from news.state import Signal, State
 log = logging.getLogger(__name__)
 
 
-def make_client() -> Client:
+def make_client() -> "Client":
+    from pyrogram import Client
     return Client(
         "claw_session",
         api_id=config.TELEGRAM_API_ID,
@@ -18,7 +21,7 @@ def make_client() -> Client:
     )
 
 
-def _to_signal(message: Message) -> Signal:
+def _to_signal(message: "Message") -> Signal:
     text = message.text or message.caption or ""
     return Signal(
         title=text[:80],
