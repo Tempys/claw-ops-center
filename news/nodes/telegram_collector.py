@@ -38,7 +38,7 @@ async def telegram_collector_node(state: State) -> dict:
             messages = [
                 m async for m in client.get_chat_history(
                     config.TELEGRAM_CHANNEL_ID,
-                    limit=1,
+                    limit=50,
                     offset_id=state["telegram_offset_id"],
                 )
             ]
@@ -52,12 +52,4 @@ async def telegram_collector_node(state: State) -> dict:
         }
     except Exception as exc:
         log.error(f"Telegram collector failed: {exc}", exc_info=True)
-
-        return {
-            "telegram_raw_signals": [Signal(
-                title="Telegram collector failed",
-                classification="error",
-                summary=str(exc),
-                source="telegram",
-            )]
-        }
+        return {}
