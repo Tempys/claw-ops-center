@@ -10,8 +10,7 @@ def _signal_hash(signal: Signal) -> str:
 
 
 async def telegram_dedup_node(state: State) -> dict:
-    seen = set(state.get("telegram_seen_hashes", []))
-    new_hashes: list[str] = []
+    seen: set[str] = set()
     deduped: list[Signal] = []
 
     for signal in state["telegram_raw_signals"]:
@@ -22,9 +21,5 @@ async def telegram_dedup_node(state: State) -> dict:
         if h not in seen:
             deduped.append(signal)
             seen.add(h)
-            new_hashes.append(h)
 
-    return {
-        "telegram_raw_signals": deduped,
-        "telegram_seen_hashes": new_hashes,
-    }
+    return {"telegram_raw_signals": deduped}
