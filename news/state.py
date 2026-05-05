@@ -22,6 +22,23 @@ class Signal(TypedDict):
     source: str
 
 
+class GitHubSignal(TypedDict):
+    title: str
+    summary: str
+    source: str
+    repo_owner: str
+    repo_name: str
+
+
+class EnrichedSignal(TypedDict):
+    title: str
+    summary: str
+    source: str
+    repo_owner: str
+    repo_name: str
+    readme_excerpt: str
+
+
 def _list_union(a: list[str], b: list[str]) -> list[str]:
     """Merge two hash lists, preserving order and deduplicating."""
     seen = set(a)
@@ -33,6 +50,7 @@ class State(TypedDict):
     telegram_offset_id: int
     telegram_raw_signals: list[Signal]
     telegram_seen_hashes: Annotated[list[str], _list_union]
+    telegram_enriched_signals: list[EnrichedSignal]
     # Email pipeline
     email_last_checked: float
     email_raw_signals: list[Signal]

@@ -80,3 +80,44 @@ def test_seen_hashes_reducer_deduplicates():
     annotation = hints["telegram_seen_hashes"]
     reducer = get_args(annotation)[1]
     assert reducer(["a", "b"], ["b", "c"]) == ["a", "b", "c"]
+
+
+def test_github_signal_fields():
+    from news.state import GitHubSignal
+    s: GitHubSignal = {
+        "title": "OpenAI Agents",
+        "summary": "https://github.com/openai/openai-agents",
+        "source": "telegram",
+        "repo_owner": "openai",
+        "repo_name": "openai-agents",
+    }
+    assert s["repo_owner"] == "openai"
+    assert s["repo_name"] == "openai-agents"
+
+
+def test_enriched_signal_fields():
+    from news.state import EnrichedSignal
+    s: EnrichedSignal = {
+        "title": "OpenAI Agents",
+        "summary": "Check this out",
+        "source": "telegram",
+        "repo_owner": "openai",
+        "repo_name": "openai-agents",
+        "readme_excerpt": "# OpenAI Agents SDK",
+    }
+    assert s["readme_excerpt"] == "# OpenAI Agents SDK"
+
+
+def test_state_has_telegram_enriched_signals_field():
+    from news.state import State
+    s: State = {
+        "telegram_offset_id": 0,
+        "telegram_raw_signals": [],
+        "telegram_seen_hashes": [],
+        "telegram_enriched_signals": [],
+        "email_last_checked": 0.0,
+        "email_raw_signals": [],
+        "email_seen_hashes": [],
+        "filtered_signals": [],
+    }
+    assert s["telegram_enriched_signals"] == []
