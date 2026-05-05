@@ -1,25 +1,25 @@
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
+from pydantic_settings import BaseSettings
 
 
-def _require(key: str) -> str:
-    val = os.environ.get(key)
-    if not val:
-        raise ValueError(f"Required environment variable {key!r} is not set")
-    return val
+class Settings(BaseSettings):
+    TELEGRAM_API_ID: int
+    TELEGRAM_API_HASH: str
+    TELEGRAM_SESSION_STRING: str = ""
+    TELEGRAM_CHANNEL_ID: str
+    TELEGRAM_BOT_TOKEN: str
+    TELEGRAM_DESTINATION_CHAT_ID: str
+    EMAIL_HOST: str
+    EMAIL_PORT: int = 993
+    EMAIL_USERNAME: str
+    EMAIL_PASSWORD: str
+    OPENAI_API_KEY: str
+    CHECKPOINT_DB_PATH: str = "checkpoints.db"
+
+    model_config = {"env_file": ".env", "case_sensitive": True}
 
 
-TELEGRAM_API_ID: int = int(_require("TELEGRAM_API_ID"))
-TELEGRAM_API_HASH: str = _require("TELEGRAM_API_HASH")
-TELEGRAM_SESSION_STRING: str = os.environ.get("TELEGRAM_SESSION_STRING", "")
-TELEGRAM_CHANNEL_ID: str = _require("TELEGRAM_CHANNEL_ID")
-TELEGRAM_BOT_TOKEN: str = _require("TELEGRAM_BOT_TOKEN")
-TELEGRAM_DESTINATION_CHAT_ID: str = _require("TELEGRAM_DESTINATION_CHAT_ID")
-EMAIL_HOST: str = _require("EMAIL_HOST")
-EMAIL_PORT: int = int(os.environ.get("EMAIL_PORT", "993"))
-EMAIL_USERNAME: str = _require("EMAIL_USERNAME")
-EMAIL_PASSWORD: str = _require("EMAIL_PASSWORD")
-OPENAI_API_KEY: str = _require("OPENAI_API_KEY")
-CHECKPOINT_DB_PATH: str = os.environ.get("CHECKPOINT_DB_PATH", "checkpoints.db")
+_s = Settings()
+
+
+def __getattr__(name: str):
+    return getattr(_s, name)
