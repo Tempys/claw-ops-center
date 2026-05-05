@@ -1,25 +1,18 @@
 # news/nodes/telegram_analyzer.py
 import asyncio
 import logging
-import re
 from typing import Literal
 
-import httpx
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 import news.config as config
-from news.state import Signal, State
+from news.state import EnrichedSignal, Signal, State
 
 log = logging.getLogger(__name__)
 
 _client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
 _MODEL = "gpt-4o-mini"
-
-_GITHUB_RE = re.compile(
-    r"https?://github\.com/([^/\s\)\"\'\#]+)/([^/\s\)\"\'\#]+)",
-    re.IGNORECASE,
-)
 
 _CATEGORIES = [
     "ai_agent_framework",
@@ -60,30 +53,9 @@ class ClassificationResult(BaseModel):
     reason: str
 
 
-async def _fetch_github_readme(owner: str, repo: str) -> str:
-    url = f"https://raw.githubusercontent.com/{owner}/{repo}/HEAD/README.md"
-    try:
-        async with httpx.AsyncClient(timeout=5.0) as http:
-            r = await http.get(url, follow_redirects=True)
-            if r.status_code == 200:
-                return r.text[:1500]
-    except Exception:
-        log.debug("GitHub README fetch failed for %s/%s", owner, repo)
-    return ""
-
-
-async def _classify_one(signal: Signal) -> Signal:
-    if signal["classification"] == "error":
-        return signal
-
+async def _classify_one(signal: EnrichedSignal) -> Signal:
     text = signal["summary"] or signal["title"]
-
-    github_block = ""
-    m = _GITHUB_RE.search(text)
-    if m:
-        readme = await _fetch_github_readme(m.group(1), m.group(2).rstrip("./"))
-        if readme:
-            github_block = f"\n\nGitHub README excerpt:\n{readme}"
+    github_block = f"\n\nGitHub README excerpt:\n{signal['readme_excerpt']}"
 
     try:
         resp = await _client.beta.chat.completions.parse(
@@ -97,15 +69,25 @@ async def _classify_one(signal: Signal) -> Signal:
         )
         result = resp.choices[0].message.parsed
         cls = result.classification if result.classification in _VALID else "other"
-        enriched = f"{result.description} — {result.reason}".strip(" —")
-        return {**signal, "classification": cls, "summary": enriched}
+        enriched_summary = f"{result.description} — {result.reason}".strip(" —")
+        return Signal(
+            title=signal["title"],
+            classification=cls,
+            summary=enriched_summary,
+            source=signal["source"],
+        )
     except Exception:
         log.warning("Classification failed: %s", signal["title"][:60], exc_info=True)
-        return {**signal, "classification": "other"}
+        return Signal(
+            title=signal["title"],
+            classification="other",
+            summary=signal["summary"],
+            source=signal["source"],
+        )
 
 
 async def telegram_analyze_node(state: State) -> dict:
-    signals = state["telegram_raw_signals"][:10]
+    signals = state["telegram_enriched_signals"][:10]
     classified = await asyncio.gather(*(_classify_one(s) for s in signals))
     filtered = [s for s in classified if s["classification"] not in {"other", "error"}]
     return {"filtered_signals": list(filtered)}
