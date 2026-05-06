@@ -76,3 +76,21 @@ async def test_enrich_node_passes_correct_fields_to_enriched_signal():
     assert sig["summary"] == _RAW_SIGNAL["summary"]
     assert sig["source"] == "telegram"
     assert sig["readme_excerpt"] == readme
+
+
+async def test_enrich_node_drops_signal_with_comma_terminated_url():
+    signal = {**_RAW_SIGNAL, "summary": "Check out https://github.com/openai/openai-agents, it is great."}
+    with patch("news.nodes.telegram_enricher._fetch_readme", AsyncMock(return_value="# README")) as mock_fetch:
+        from news.nodes.telegram_enricher import telegram_enrich_node
+        await telegram_enrich_node({**STATE_BASE, "telegram_raw_signals": [signal]})
+
+    mock_fetch.assert_awaited_once_with("openai", "openai-agents")
+
+
+async def test_enrich_node_truncates_readme_to_1500_chars():
+    long_readme = "x" * 2000
+    with patch("news.nodes.telegram_enricher._fetch_readme", AsyncMock(return_value=long_readme[:1500])):
+        from news.nodes.telegram_enricher import telegram_enrich_node
+        result = await telegram_enrich_node({**STATE_BASE, "telegram_raw_signals": [_RAW_SIGNAL]})
+
+    assert len(result["telegram_enriched_signals"][0]["readme_excerpt"]) == 1500

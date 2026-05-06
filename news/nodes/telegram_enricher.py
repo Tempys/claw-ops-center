@@ -9,7 +9,7 @@ from news.state import EnrichedSignal, GitHubSignal, Signal, State
 log = logging.getLogger(__name__)
 
 _GITHUB_RE = re.compile(
-    r"https?://github\.com/([^/\s\)\"\'\#]+)/([^/\s\)\"\'\#]+)",
+    r"https?://github\.com/([^/\s\)\"\'\#,;!?]+)/([^/\s\)\"\'\#,;!?]+)",
     re.IGNORECASE,
 )
 

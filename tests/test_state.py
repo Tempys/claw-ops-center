@@ -49,6 +49,7 @@ def test_state_has_per_source_raw_signal_fields():
         "telegram_offset_id": 0,
         "telegram_raw_signals": [],
         "telegram_seen_hashes": [],
+        "telegram_enriched_signals": [],
         "email_last_checked": 0.0,
         "email_raw_signals": [],
         "email_seen_hashes": [],
