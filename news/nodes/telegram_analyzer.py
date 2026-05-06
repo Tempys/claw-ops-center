@@ -2,13 +2,13 @@
 import asyncio
 import logging
 import re
-from typing import Literal
+from typing import Literal, get_args
 
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 import news.config as config
-from news.prompts.telegram_classify import SYSTEM as _SYSTEM
+from news.prompts.telegram_classify import build_system
 from news.state import EnrichedSignal, State
 
 log = logging.getLogger(__name__)
@@ -34,6 +34,8 @@ class ClassificationResult(BaseModel):
     def summary(self) -> str:
         return f"{self.description} — {self.reason}".removesuffix(" —")
 
+
+_SYSTEM = build_system(list(get_args(ClassificationResult.model_fields["classification"].annotation)))
 
 _STARS_TREND_RE = re.compile(r"Stars trend:.*", re.DOTALL | re.IGNORECASE)
 
