@@ -71,12 +71,5 @@ async def email_collector_node(state: State) -> dict:
         ]
         return {"email_last_checked": now, "email_raw_signals": signals}
     except Exception as exc:
-        log.error(f"Email collector failed: {exc}", exc_info=True)
-        return {
-            "email_raw_signals": [Signal(
-                title="Email collector failed",
-                classification="error",
-                summary=str(exc),
-                source="email",
-            )]
-        }
+        log.debug(f"Email collector failed: {exc}")
+        return {"email_raw_signals": []}
