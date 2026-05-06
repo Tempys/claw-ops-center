@@ -14,16 +14,7 @@ log = logging.getLogger(__name__)
 
 _client = AsyncOpenAI(api_key=config.OPENAI_API_KEY)
 _MODEL = "gpt-4o-mini"
-
-_CATEGORIES = [
-    "ai_agent_framework",
-    "llm_finetuning",
-    "skill_plugin_builder",
-    "code_generation",
-    "dev_productivity",
-    "prompt_engineering",
-    "other",
-]
+_MAX_SIGNALS = 10
 
 
 class ClassificationResult(BaseModel):
@@ -61,7 +52,7 @@ async def _classify_one(signal: EnrichedSignal) -> Signal:
         result = resp.output_parsed
         if result is None:
             raise ValueError("Structured output parsing returned None")
-        enriched_summary = f"{result.description} — {result.reason}".strip(" —")
+        enriched_summary = f"{result.description} — {result.reason}".removesuffix(" —")
         return Signal(
             title=signal["title"],
             classification=result.classification,
@@ -69,17 +60,17 @@ async def _classify_one(signal: EnrichedSignal) -> Signal:
             source=signal["source"],
         )
     except Exception:
-        log.warning("Classification failed: %s", signal["title"][:60], exc_info=True)
+        log.exception("Classification failed: %s", signal["title"][:60])
         return Signal(
             title=signal["title"],
             classification="other",
-            summary=signal["summary"],
+            summary=signal["summary"] or signal["title"],
             source=signal["source"],
         )
 
 
 async def telegram_analyze_node(state: State) -> dict:
-    signals = state["telegram_enriched_signals"][:10]
+    signals = state["telegram_enriched_signals"][:_MAX_SIGNALS]
     classified = await asyncio.gather(*(_classify_one(s) for s in signals))
     filtered = [s for s in classified if s["classification"] not in {"other", "error"}]
     return {"filtered_signals": list(filtered)}
