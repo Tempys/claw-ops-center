@@ -1,6 +1,7 @@
 # news/nodes/telegram_analyzer.py
 import asyncio
 import logging
+import re
 from typing import Literal
 
 from openai import AsyncOpenAI
@@ -31,8 +32,15 @@ class ClassificationResult(BaseModel):
     reason: str
 
 
+_STARS_TREND_RE = re.compile(r"Stars trend:.*", re.DOTALL | re.IGNORECASE)
+
+
+def _clean_text(text: str) -> str:
+    return _STARS_TREND_RE.sub("", text).strip()
+
+
 async def _classify_one(signal: EnrichedSignal) -> Signal:
-    text = signal["summary"] or signal["title"]
+    text = _clean_text(signal["summary"] or signal["title"])
     github_block = (
         f"\n\nGitHub README excerpt:\n{signal['readme_excerpt']}"
         if signal["readme_excerpt"]

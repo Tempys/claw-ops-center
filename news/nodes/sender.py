@@ -1,13 +1,14 @@
 import logging
 
 from telegram import Bot
+from telegram.request import HTTPXRequest
 
 import news.config as config
 from news.state import State
 
 log = logging.getLogger(__name__)
 
-_bot = Bot(token=config.TELEGRAM_BOT_TOKEN)
+_bot = Bot(token=config.TELEGRAM_BOT_TOKEN, request=HTTPXRequest(read_timeout=30))
 
 
 async def sender_node(state: State) -> dict:
