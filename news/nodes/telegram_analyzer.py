@@ -7,6 +7,7 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 import news.config as config
+from news.prompts.telegram_classify import SYSTEM as _SYSTEM
 from news.state import EnrichedSignal, Signal, State
 
 log = logging.getLogger(__name__)
@@ -23,20 +24,6 @@ _CATEGORIES = [
     "prompt_engineering",
     "other",
 ]
-
-_VALID = set(_CATEGORIES)
-
-_SYSTEM = (
-    "You are a signal classifier for a curated ML/AI Telegram channel. "
-    "Posts are short — often just a title, a URL, or a few sentences. "
-    "The channel is tech-focused: classify borderline posts rather than defaulting to 'other'.\n\n"
-    "Given a Telegram post and optional GitHub repository context, return JSON with:\n"
-    "- classification: the most fitting category\n"
-    "- description: one sentence describing what the project or post is about\n"
-    "- reason: one sentence explaining why it fits the chosen category\n\n"
-    "Valid categories: ai_agent_framework, llm_finetuning, skill_plugin_builder, "
-    "code_generation, dev_productivity, prompt_engineering, other."
-)
 
 
 class ClassificationResult(BaseModel):
@@ -55,24 +42,29 @@ class ClassificationResult(BaseModel):
 
 async def _classify_one(signal: EnrichedSignal) -> Signal:
     text = signal["summary"] or signal["title"]
-    github_block = f"\n\nGitHub README excerpt:\n{signal['readme_excerpt']}"
+    github_block = (
+        f"\n\nGitHub README excerpt:\n{signal['readme_excerpt']}"
+        if signal["readme_excerpt"]
+        else ""
+    )
 
     try:
-        resp = await _client.beta.chat.completions.parse(
+        resp = await _client.responses.parse(
             model=_MODEL,
-            max_tokens=256,
-            messages=[
+            max_output_tokens=256,
+            input=[
                 {"role": "system", "content": _SYSTEM},
                 {"role": "user", "content": f"Post:\n{text}{github_block}"},
             ],
-            response_format=ClassificationResult,
+            text_format=ClassificationResult,
         )
-        result = resp.choices[0].message.parsed
-        cls = result.classification if result.classification in _VALID else "other"
+        result = resp.output_parsed
+        if result is None:
+            raise ValueError("Structured output parsing returned None")
         enriched_summary = f"{result.description} — {result.reason}".strip(" —")
         return Signal(
             title=signal["title"],
-            classification=cls,
+            classification=result.classification,
             summary=enriched_summary,
             source=signal["source"],
         )
