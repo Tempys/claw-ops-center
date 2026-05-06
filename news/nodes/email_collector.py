@@ -54,6 +54,9 @@ def fetch_emails_since(since_timestamp: float) -> list[dict]:
 
 
 async def email_collector_node(state: State) -> dict:
+    if not config.EMAIL_HOST:
+        log.info("Email not configured, skipping")
+        return {"email_raw_signals": []}
     try:
         now = time.time()
         emails = await asyncio.to_thread(fetch_emails_since, state["email_last_checked"])

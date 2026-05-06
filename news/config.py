@@ -12,10 +12,10 @@ class Settings(BaseSettings):
     TELEGRAM_CHANNEL_ID: str
     TELEGRAM_BOT_TOKEN: str
     TELEGRAM_DESTINATION_CHAT_ID: str
-    EMAIL_HOST: str
+    EMAIL_HOST: str = ""
     EMAIL_PORT: int = 993
-    EMAIL_USERNAME: str
-    EMAIL_PASSWORD: str
+    EMAIL_USERNAME: str = ""
+    EMAIL_PASSWORD: str = ""
     OPENAI_API_KEY: str
     CHECKPOINT_DB_PATH: str = "checkpoints.db"
 
