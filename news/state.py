@@ -45,15 +45,20 @@ def _list_union(a: list[str], b: list[str]) -> list[str]:
     return a + [x for x in b if x not in seen]
 
 
-class State(TypedDict):
-    # Telegram pipeline
+class TelegramState(TypedDict):
     telegram_offset_id: int
     telegram_raw_signals: list[Signal]
     telegram_seen_hashes: Annotated[list[str], _list_union]
     telegram_enriched_signals: list[EnrichedSignal]
-    # Email pipeline
+    filtered_signals: Annotated[list[Signal], operator.add]
+
+
+class EmailState(TypedDict):
     email_last_checked: float
     email_raw_signals: list[Signal]
     email_seen_hashes: Annotated[list[str], _list_union]
-    # Fan-in — both pipelines append here via operator.add
     filtered_signals: Annotated[list[Signal], operator.add]
+
+
+class State(TelegramState, EmailState):
+    pass

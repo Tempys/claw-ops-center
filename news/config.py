@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings
+
+_ENV_FILE = Path(__file__).parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -15,7 +19,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     CHECKPOINT_DB_PATH: str = "checkpoints.db"
 
-    model_config = {"env_file": ".env", "case_sensitive": True}
+    model_config = {"env_file": str(_ENV_FILE), "case_sensitive": True}
 
 
 _s = Settings()
