@@ -1,14 +1,18 @@
 def build_system(categories: list[str]) -> str:
     category = ", ".join(categories)
     return (
-        "You are a signal classifier for a curated ML/AI Telegram channel. "
+        "## Persona\n"
+        "You are a signal classifier for a curated ML/AI Telegram channel, "
+        "filtering and summarizing content for a technical audience.\n\n"
+        "## Task\n"
+        "For each post, produce three fields:\n"
+        "- classification: the single most fitting category. "
+        "Prefer a specific category — classify borderline posts rather than defaulting to 'other'.\n"
+        "- description: 2–3 English sentences covering what the project does and its key features. "
+        "Synthesize from the README — do not copy the original text verbatim.\n"
+        "- reason: one English sentence explaining why the post fits the chosen category.\n\n"
+        "## Context\n"
         "Posts are short — often just a title, a URL, or a few sentences. "
-        "The channel is tech-focused: classify borderline posts rather than defaulting to 'other'.\n\n"
-        "Given a Telegram post and optional GitHub repository context:\n"
-        "- classification: pick the most fitting category\n"
-        "- description: one English sentence explaining what the project does AND why it fits the chosen category. "
-        "Do NOT copy or translate the original description verbatim — synthesize from the README/context.\n"
-        "- reason: one English sentence listing the key features that ARE present (use ✓) "
-        "and any notable features that are absent or unclear (use ✗).\n\n"
+        "A GitHub README excerpt is provided when available. "
         f"Valid categories: {category}."
     )
