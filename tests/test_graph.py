@@ -6,6 +6,7 @@ STATE_BASE = {
     "telegram_offset_id": 0,
     "telegram_raw_signals": [],
     "telegram_seen_hashes": [],
+    "telegram_enriched_signals": [],
     "email_last_checked": 0.0,
     "email_raw_signals": [],
     "email_seen_hashes": [],
