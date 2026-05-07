@@ -1,7 +1,9 @@
 # news/nodes/email_analyzer.py
 from news.nodes.analyzer import _classify_batch
-from news.prompts.email_classify import SYSTEM as _EMAIL_SYSTEM
+from news.prompts import load_prompt
 from news.state import State
+
+_EMAIL_SYSTEM = load_prompt("email_classify")
 
 _BATCH_SIZE = 5
 
