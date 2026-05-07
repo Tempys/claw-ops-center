@@ -24,6 +24,7 @@ def make_client() -> "Client":
 def _to_signal(message: "Message") -> Signal:
     text = message.text or message.caption or ""
     return Signal(
+        telegram_id=message.id,
         title=text[:80],
         classification="other",
         summary=text,
@@ -39,7 +40,7 @@ async def telegram_collector_node(state: State) -> dict:
                 m async for m in client.get_chat_history(
                     config.TELEGRAM_CHANNEL_ID,
                     limit=50,
-                    offset_id=state.get("telegram_offset_id", 0),
+                    offset_id=state["telegram_offset_id"],
                 )
             ]
 

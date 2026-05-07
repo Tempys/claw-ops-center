@@ -16,6 +16,7 @@ CLASSIFICATION = Literal[
 
 
 class Signal(TypedDict):
+    telegram_id: int
     title: str
     classification: CLASSIFICATION
     summary: str
@@ -30,15 +31,10 @@ class GitHubSignal(TypedDict):
     repo_name: str
 
 
-class EnrichedSignal(TypedDict):
-    title: str
-    source: str
+class ExtractNodeOutput(TypedDict):
+    telegram_id: int
     github_link: str
     readme: str
-
-
-class EnrichNodeOutput(TypedDict):
-    telegram_enriched_signals: list[EnrichedSignal]
 
 
 def _list_union(a: list[str], b: list[str]) -> list[str]:
@@ -51,7 +47,8 @@ class TelegramState(TypedDict):
     telegram_offset_id: int
     telegram_raw_signals: list[Signal]
     telegram_seen_hashes: Annotated[list[str], _list_union]
-    telegram_enriched_signals: list[EnrichedSignal]
+    telegram_extracted_signals: list[ExtractNodeOutput]
+    telegram_id: list[int]
     filtered_signals: Annotated[list[Signal], operator.add]
 
 

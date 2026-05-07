@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 import news.config as config
 from news.prompts import load_prompt
-from news.state import EnrichedSignal, State
+from news.state import ExtractNodeOutput, State
 
 log = logging.getLogger(__name__)
 
@@ -47,20 +47,16 @@ def _clean_text(text: str) -> str:
     return _STARS_TREND_RE.sub("", text).strip()
 
 
-async def _classify_one(signal: EnrichedSignal) -> ClassificationResult:
-    text = _clean_text(signal["title"])
-    github_block = (
-        f"\n\nGitHub README excerpt:\n{signal['readme']}"
-        if signal["readme"]
-        else ""
-    )
+async def _classify_one(signal: ExtractNodeOutput) -> ClassificationResult:
+    readme_text = _clean_text(signal["readme"])
+    content = f"GitHub: {signal['github_link']}\n\nREADME:\n{readme_text}"
 
     resp = await _client.beta.chat.completions.parse(
         model=_MODEL,
         max_tokens=256,
         messages=[
             {"role": "system", "content": _SYSTEM},
-            {"role": "user", "content": f"Post:\n{text}{github_block}"},
+            {"role": "user", "content": content},
         ],
         response_format=ClassificationResult,
     )
@@ -71,7 +67,7 @@ async def _classify_one(signal: EnrichedSignal) -> ClassificationResult:
 
 
 async def telegram_analyze_node(state: State) -> dict:
-    signals = state["telegram_enriched_signals"][:_MAX_SIGNALS]
+    signals = state["telegram_extracted_signals"][:_MAX_SIGNALS]
     results = await asyncio.gather(*(_classify_one(s) for s in signals), return_exceptions=True)
     filtered = [
         sig for sig, result in zip(signals, results)

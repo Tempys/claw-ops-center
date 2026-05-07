@@ -21,6 +21,7 @@ def test_classification_literal_contains_expected_values():
 def test_signal_classification_accepts_new_values():
     from news.state import Signal
     s: Signal = {
+        "telegram_id": 1,
         "title": "LangGraph 2.0 released",
         "classification": "ai_agent_framework",
         "summary": "Major update to LangGraph",
@@ -32,6 +33,7 @@ def test_signal_classification_accepts_new_values():
 def test_signal_fields():
     from news.state import Signal
     s: Signal = {
+        "telegram_id": 2,
         "title": "BTC surge",
         "classification": "other",
         "summary": "BTC up 15% in 1h",
@@ -49,7 +51,7 @@ def test_state_has_per_source_raw_signal_fields():
         "telegram_offset_id": 0,
         "telegram_raw_signals": [],
         "telegram_seen_hashes": [],
-        "telegram_enriched_signals": [],
+        "telegram_extracted_signals": [],
         "email_last_checked": 0.0,
         "email_raw_signals": [],
         "email_seen_hashes": [],
@@ -96,28 +98,28 @@ def test_github_signal_fields():
     assert s["repo_name"] == "openai-agents"
 
 
-def test_enriched_signal_fields():
-    from news.state import EnrichedSignal
-    s: EnrichedSignal = {
-        "title": "OpenAI Agents",
-        "source": "telegram",
+def test_extract_node_output_fields():
+    from news.state import ExtractNodeOutput
+    s: ExtractNodeOutput = {
+        "telegram_id": 42,
         "github_link": "https://github.com/openai/openai-agents",
         "readme": "# OpenAI Agents SDK",
     }
+    assert s["telegram_id"] == 42
     assert s["readme"] == "# OpenAI Agents SDK"
     assert s["github_link"] == "https://github.com/openai/openai-agents"
 
 
-def test_state_has_telegram_enriched_signals_field():
+def test_state_has_telegram_extracted_signals_field():
     from news.state import State
     s: State = {
         "telegram_offset_id": 0,
         "telegram_raw_signals": [],
         "telegram_seen_hashes": [],
-        "telegram_enriched_signals": [],
+        "telegram_extracted_signals": [],
         "email_last_checked": 0.0,
         "email_raw_signals": [],
         "email_seen_hashes": [],
         "filtered_signals": [],
     }
-    assert s["telegram_enriched_signals"] == []
+    assert s["telegram_extracted_signals"] == []
