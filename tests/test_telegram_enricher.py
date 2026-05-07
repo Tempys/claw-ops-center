@@ -35,9 +35,8 @@ async def test_enrich_node_extracts_github_url_and_fetches_readme():
 
     assert len(result["telegram_enriched_signals"]) == 1
     sig = result["telegram_enriched_signals"][0]
-    assert sig["repo_owner"] == "openai"
-    assert sig["repo_name"] == "openai-agents"
-    assert sig["readme_excerpt"] == readme
+    assert sig["github_link"] == "https://github.com/openai/openai-agents"
+    assert sig["readme"] == readme
 
 
 async def test_enrich_node_drops_plain_text_signals():
@@ -73,9 +72,9 @@ async def test_enrich_node_passes_correct_fields_to_enriched_signal():
 
     sig = result["telegram_enriched_signals"][0]
     assert sig["title"] == _RAW_SIGNAL["title"]
-    assert sig["summary"] == _RAW_SIGNAL["summary"]
     assert sig["source"] == "telegram"
-    assert sig["readme_excerpt"] == readme
+    assert sig["github_link"] == "https://github.com/openai/openai-agents"
+    assert sig["readme"] == readme
 
 
 async def test_enrich_node_drops_signal_with_comma_terminated_url():
@@ -93,4 +92,4 @@ async def test_enrich_node_truncates_readme_to_1500_chars():
         from news.nodes.telegram_enricher import telegram_enrich_node
         result = await telegram_enrich_node({**STATE_BASE, "telegram_raw_signals": [_RAW_SIGNAL]})
 
-    assert len(result["telegram_enriched_signals"][0]["readme_excerpt"]) == 1500
+    assert len(result["telegram_enriched_signals"][0]["readme"]) == 1500

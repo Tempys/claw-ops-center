@@ -32,11 +32,13 @@ class GitHubSignal(TypedDict):
 
 class EnrichedSignal(TypedDict):
     title: str
-    summary: str
     source: str
-    repo_owner: str
-    repo_name: str
-    readme_excerpt: str
+    github_link: str
+    readme: str
+
+
+class EnrichNodeOutput(TypedDict):
+    telegram_enriched_signals: list[EnrichedSignal]
 
 
 def _list_union(a: list[str], b: list[str]) -> list[str]:

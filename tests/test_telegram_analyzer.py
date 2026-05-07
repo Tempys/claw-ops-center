@@ -16,14 +16,12 @@ def _make_parse_response(cls: str, description: str = "A project", reason: str =
     return resp
 
 
-def _enriched(title: str, summary: str, readme: str = "# Some README") -> dict:
+def _enriched(title: str, readme: str = "# Some README") -> dict:
     return {
         "title": title,
-        "summary": summary,
         "source": "telegram",
-        "repo_owner": "some-owner",
-        "repo_name": "some-repo",
-        "readme_excerpt": readme,
+        "github_link": "https://github.com/some-owner/some-repo",
+        "readme": readme,
     }
 
 
@@ -41,8 +39,8 @@ STATE_BASE = {
 
 async def test_analyze_node_classifies_enriched_signals():
     signals = [
-        _enriched("LangGraph 2.0 drops", "Major LangGraph release"),
-        _enriched("BTC up 5%", "Price update"),
+        _enriched("LangGraph 2.0 drops"),
+        _enriched("BTC up 5%"),
     ]
     mock_client = MagicMock()
     mock_client.beta.chat.completions.parse = AsyncMock(side_effect=[
@@ -55,11 +53,13 @@ async def test_analyze_node_classifies_enriched_signals():
         result = await telegram_analyze_node({**STATE_BASE, "telegram_enriched_signals": signals})
 
     assert len(result["filtered_signals"]) == 1
-    assert result["filtered_signals"][0]["classification"] == "ai_agent_framework"
+    sig = result["filtered_signals"][0]
+    assert sig["title"] == "LangGraph 2.0 drops"
+    assert sig["github_link"] == "https://github.com/some-owner/some-repo"
 
 
 async def test_analyze_node_returns_empty_when_all_other():
-    signals = [_enriched("BTC up 5%", "Price update")]
+    signals = [_enriched("BTC up 5%")]
     mock_client = MagicMock()
     mock_client.beta.chat.completions.parse = AsyncMock(return_value=_make_parse_response("other"))
 
@@ -70,15 +70,11 @@ async def test_analyze_node_returns_empty_when_all_other():
     assert result["filtered_signals"] == []
 
 
-async def test_analyze_node_builds_enriched_summary():
-    signals = [_enriched("Tool X", "A new tool")]
+async def test_analyze_node_passes_enriched_signal_through():
+    signals = [_enriched("Tool X", readme="# Tool X docs")]
     mock_client = MagicMock()
     mock_client.beta.chat.completions.parse = AsyncMock(
-        return_value=_make_parse_response(
-            "dev_productivity",
-            "Tool X boosts developer workflow",
-            "Directly improves dev productivity",
-        )
+        return_value=_make_parse_response("dev_productivity")
     )
 
     with patch("news.nodes.telegram_analyzer._client", mock_client):
@@ -87,12 +83,13 @@ async def test_analyze_node_builds_enriched_summary():
 
     assert len(result["filtered_signals"]) == 1
     sig = result["filtered_signals"][0]
-    assert "Tool X boosts developer workflow" in sig["summary"]
-    assert "Directly improves dev productivity" in sig["summary"]
+    assert sig["title"] == "Tool X"
+    assert sig["readme"] == "# Tool X docs"
+    assert sig["github_link"] == "https://github.com/some-owner/some-repo"
 
 
 async def test_analyze_node_includes_readme_in_prompt():
-    signals = [_enriched("Tool X", "A new tool", readme="# Tool X\nBoosts productivity dramatically.")]
+    signals = [_enriched("Tool X", readme="# Tool X\nBoosts productivity dramatically.")]
     mock_client = MagicMock()
     mock_client.beta.chat.completions.parse = AsyncMock(
         return_value=_make_parse_response("dev_productivity")
@@ -109,7 +106,7 @@ async def test_analyze_node_includes_readme_in_prompt():
 
 
 async def test_analyze_node_falls_back_on_llm_error():
-    signals = [_enriched("Some tool", "A cool tool")]
+    signals = [_enriched("Some tool")]
     mock_client = MagicMock()
     mock_client.beta.chat.completions.parse = AsyncMock(side_effect=Exception("API down"))
 

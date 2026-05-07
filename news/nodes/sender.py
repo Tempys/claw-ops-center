@@ -17,10 +17,10 @@ async def sender_node(state: State) -> dict:
         log.info("No signals to send")
         return {}
     for signal in signals:
-        summary = signal["summary"] if isinstance(signal, dict) else signal.summary
+        text = f"{signal['title']}\n{signal['github_link']}\n\n{signal['readme']}"
         await _bot.send_message(
             chat_id=config.TELEGRAM_DESTINATION_CHAT_ID,
-            text=summary,
+            text=text,
         )
-        log.info("Sent: %s", summary[:80])
+        log.info("Sent: %s", signal["title"])
     return {}

@@ -39,7 +39,7 @@ async def telegram_collector_node(state: State) -> dict:
                 m async for m in client.get_chat_history(
                     config.TELEGRAM_CHANNEL_ID,
                     limit=50,
-                    offset_id=state["telegram_offset_id"],
+                    offset_id=state.get("telegram_offset_id", 0),
                 )
             ]
 

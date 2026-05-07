@@ -100,13 +100,12 @@ def test_enriched_signal_fields():
     from news.state import EnrichedSignal
     s: EnrichedSignal = {
         "title": "OpenAI Agents",
-        "summary": "Check this out",
         "source": "telegram",
-        "repo_owner": "openai",
-        "repo_name": "openai-agents",
-        "readme_excerpt": "# OpenAI Agents SDK",
+        "github_link": "https://github.com/openai/openai-agents",
+        "readme": "# OpenAI Agents SDK",
     }
-    assert s["readme_excerpt"] == "# OpenAI Agents SDK"
+    assert s["readme"] == "# OpenAI Agents SDK"
+    assert s["github_link"] == "https://github.com/openai/openai-agents"
 
 
 def test_state_has_telegram_enriched_signals_field():

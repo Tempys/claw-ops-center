@@ -4,7 +4,7 @@ import re
 
 import httpx
 
-from news.state import EnrichedSignal, GitHubSignal, Signal, State
+from news.state import EnrichedSignal, EnrichNodeOutput, GitHubSignal, Signal, State
 
 log = logging.getLogger(__name__)
 
@@ -47,17 +47,16 @@ async def _enrich_one(signal: Signal) -> EnrichedSignal | None:
     readme = await _fetch_readme(gh["repo_owner"], gh["repo_name"])
     if not readme:
         return None
+    github_link = f"https://github.com/{gh['repo_owner']}/{gh['repo_name']}"
     return EnrichedSignal(
         title=gh["title"],
-        summary=gh["summary"],
         source=gh["source"],
-        repo_owner=gh["repo_owner"],
-        repo_name=gh["repo_name"],
-        readme_excerpt=readme,
+        github_link=github_link,
+        readme=readme,
     )
 
 
-async def telegram_enrich_node(state: State) -> dict:
+async def telegram_enrich_node(state: State) -> EnrichNodeOutput:
     signals = state["telegram_raw_signals"]
     results = await asyncio.gather(*(_enrich_one(s) for s in signals))
-    return {"telegram_enriched_signals": [r for r in results if r is not None]}
+    return EnrichNodeOutput(telegram_enriched_signals=[r for r in results if r is not None])

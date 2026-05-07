@@ -48,10 +48,10 @@ def _clean_text(text: str) -> str:
 
 
 async def _classify_one(signal: EnrichedSignal) -> ClassificationResult:
-    text = _clean_text(signal["summary"] or signal["title"])
+    text = _clean_text(signal["title"])
     github_block = (
-        f"\n\nGitHub README excerpt:\n{signal['readme_excerpt']}"
-        if signal["readme_excerpt"]
+        f"\n\nGitHub README excerpt:\n{signal['readme']}"
+        if signal["readme"]
         else ""
     )
 
@@ -74,7 +74,7 @@ async def telegram_analyze_node(state: State) -> dict:
     signals = state["telegram_enriched_signals"][:_MAX_SIGNALS]
     results = await asyncio.gather(*(_classify_one(s) for s in signals), return_exceptions=True)
     filtered = [
-        s for s in results
-        if not isinstance(s, BaseException) and s.classification not in {"other", "error"}
+        sig for sig, result in zip(signals, results)
+        if not isinstance(result, BaseException) and result.classification not in {"other", "error"}
     ]
-    return {"filtered_signals": list(filtered)}
+    return {"filtered_signals": filtered}
