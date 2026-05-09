@@ -52,6 +52,8 @@ async def telegram_collector_node(state: TelegramPipelineState) -> dict:
             return {}
         return {
             "telegram_offset_id": messages[0].id,
+
+
             "telegram_raw_signals": [_to_signal(m) for m in messages],
         }
     except Exception as exc:

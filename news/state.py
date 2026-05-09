@@ -32,6 +32,10 @@ class EnrichedSignal(TypedDict):
     readme: str
 
 
+def _take_max(a: float, b: float) -> float:
+    return max(a, b)
+
+
 def _list_union(a: list[str], b: list[str]) -> list[str]:
     """Merge two hash lists, preserving order and deduplicating."""
     seen = set(a)
@@ -41,7 +45,7 @@ def _list_union(a: list[str], b: list[str]) -> list[str]:
 class State(TypedDict):
     """Persistent state — survives across scheduler invocations."""
     telegram_offset_id: int
-    email_last_checked: float
+    email_last_checked: Annotated[float, _take_max]
     email_seen_hashes: Annotated[list[str], _list_union]
 
 class TelegramPipelineState(State):
@@ -52,7 +56,7 @@ class TelegramPipelineState(State):
 
 
 class EmailState(TypedDict):
-    email_last_checked: float
+    email_last_checked: Annotated[float, _take_max]
     email_raw_signals: list[Signal]
     email_seen_hashes: Annotated[list[str], _list_union]
     filtered_signals: Annotated[list[Signal], operator.add]
