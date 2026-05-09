@@ -18,15 +18,12 @@ _CLASSIFIABLE = _VALID_CLASSIFICATIONS - {"error"}
 def _format_signals(signals: list[Signal]) -> str:
     lines = ["Signals collected this run:\n"]
     for i, s in enumerate(signals, 1):
-        lines.append(
-            f"{i}. [{s['source'].upper()}][{s['classification']}] {s['title']}\n   {s['summary']}\n"
-        )
+        lines.append(f"{i}. {s['url']}\n")
     return "\n".join(lines)
 
 
 async def _classify_batch(signals: list[Signal], system_prompt: str) -> list[Signal]:
-    non_error = [s for s in signals if s["classification"] != "error"]
-    if not non_error:
+    if not signals:
         return signals
 
     try:
@@ -35,7 +32,7 @@ async def _classify_batch(signals: list[Signal], system_prompt: str) -> list[Sig
             max_tokens=512,
             messages=[
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": _format_signals(non_error)},
+                {"role": "user", "content": _format_signals(signals)},
             ],
         )
         items = json.loads(response.choices[0].message.content)
@@ -48,11 +45,9 @@ async def _classify_batch(signals: list[Signal], system_prompt: str) -> list[Sig
         log.warning("Classify pass failed, falling back to 'other'", exc_info=True)
         index_map = {}
 
-    classified_non_error: list[Signal] = []
-    for i, signal in enumerate(non_error, 1):
+    result: list[Signal] = []
+    for i, signal in enumerate(signals, 1):
         raw_cls = index_map.get(i, "other")
         cls = raw_cls if raw_cls in _CLASSIFIABLE else "other"
-        classified_non_error.append({**signal, "classification": cls})
-
-    ne_iter = iter(classified_non_error)
-    return [next(ne_iter) if s["classification"] != "error" else s for s in signals]
+        result.append({**signal, "classification": cls})  # type: ignore[misc]
+    return result

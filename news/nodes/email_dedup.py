@@ -5,8 +5,7 @@ from news.state import Signal, State
 
 
 def _signal_hash(signal: Signal) -> str:
-    key = f"{signal['title']}:{signal['summary'][:200]}"
-    return hashlib.sha256(key.encode()).hexdigest()[:16]
+    return hashlib.sha256(signal["url"].encode()).hexdigest()[:16]
 
 
 async def email_dedup_node(state: State) -> dict:
@@ -14,10 +13,7 @@ async def email_dedup_node(state: State) -> dict:
     new_hashes: list[str] = []
     deduped: list[Signal] = []
 
-    for signal in state["email_raw_signals"]:
-        if signal["classification"] == "error":
-            deduped.append(signal)
-            continue
+    for signal in state.get("email_raw_signals", []):
         h = _signal_hash(signal)
         if h not in seen:
             deduped.append(signal)

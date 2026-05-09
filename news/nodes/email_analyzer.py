@@ -9,7 +9,6 @@ _BATCH_SIZE = 5
 
 
 async def email_analyze_node(state: EmailState) -> dict:
-    signals = state["email_raw_signals"][:_BATCH_SIZE]
+    signals = state.get("email_raw_signals", [])[:_BATCH_SIZE]
     classified = await _classify_batch(signals, _EMAIL_SYSTEM)
-    filtered = [s for s in classified if s["classification"] not in {"other", "error"}]
-    return {"filtered_signals": filtered}
+    return {"filtered_signals": classified}

@@ -22,13 +22,16 @@ def make_client() -> "Client":
 
 
 def _to_signal(message: "Message") -> Signal:
-    text = message.text or message.caption or ""
+    from pyrogram.enums import MessageEntityType
+    url = ""
+    entities = message.entities or message.caption_entities or []
+    for entity in entities:
+        if entity.type == MessageEntityType.TEXT_LINK:
+            url = entity.url or ""
+            break
     return Signal(
         telegram_id=message.id,
-        title=text[:80],
-        classification="other",
-        summary=text,
-        source="telegram",
+        url=url,
     )
 
 
@@ -40,7 +43,7 @@ async def telegram_collector_node(state: TelegramPipelineState) -> dict:
                 m async for m in client.get_chat_history(
                     config.TELEGRAM_CHANNEL_ID,
                     limit=50,
-                    offset_id=state["telegram_offset_id"],
+                    offset_id=state.get("telegram_offset_id", 0),
                 )
             ]
 

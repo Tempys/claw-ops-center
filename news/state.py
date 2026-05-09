@@ -17,18 +17,8 @@ CLASSIFICATION = Literal[
 
 class Signal(TypedDict):
     telegram_id: int
-    title: str
-    classification: CLASSIFICATION
-    summary: str
-    source: str
+    url: str
 
-
-class GitHubSignal(TypedDict):
-    title: str
-    summary: str
-    source: str
-    repo_owner: str
-    repo_name: str
 
 
 class ExtractNodeOutput(TypedDict):
@@ -38,8 +28,6 @@ class ExtractNodeOutput(TypedDict):
 
 
 class EnrichedSignal(TypedDict):
-    title: str
-    source: str
     github_link: str
     readme: str
 

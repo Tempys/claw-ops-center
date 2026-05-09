@@ -54,30 +54,4 @@ def fetch_emails_since(since_timestamp: float) -> list[dict]:
 
 
 async def email_collector_node(state: EmailState) -> dict:
-    if not config.EMAIL_HOST:
-        log.info("Email not configured, skipping")
-        return {"email_raw_signals": []}
-    try:
-        now = time.time()
-        emails = await asyncio.to_thread(fetch_emails_since, state["email_last_checked"])
-        signals = [
-            Signal(
-                title=e["subject"] or "(no subject)",
-                classification="other",
-                summary=e["body"],
-                source="email",
-            )
-            for e in emails
-        ]
-        return {"email_last_checked": now, "email_raw_signals": signals}
-    except Exception as exc:
-        log.debug(f"Email collector failed: {exc}")
-        return {
-            "email_raw_signals": [Signal(
-                telegram_id=0,
-                title="Email collector failed",
-                classification="error",
-                summary=str(exc),
-                source="email",
-            )]
-        }
+    return {"email_raw_signals": []}
