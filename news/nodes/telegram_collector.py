@@ -42,7 +42,7 @@ async def telegram_collector_node(state: TelegramPipelineState) -> dict:
             messages = [
                 m async for m in client.get_chat_history(
                     config.TELEGRAM_CHANNEL_ID,
-                    limit=50,
+                    limit=1,
                     offset_id=state.get("telegram_offset_id", 0),
                 )
             ]

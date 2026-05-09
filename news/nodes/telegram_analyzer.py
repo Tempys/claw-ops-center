@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 import news.config as config
 from news.prompts import load_prompt
-from news.state import EnrichedSignal, TelegramPipelineState
+from news.state import AnalyzedSignal, EnrichedSignal, TelegramPipelineState
 
 log = logging.getLogger(__name__)
 
@@ -69,8 +69,9 @@ async def _classify_one(signal: EnrichedSignal) -> ClassificationResult:
 async def telegram_analyze_node(state: TelegramPipelineState) -> dict:
     signals = state["telegram_enriched_signals"][:_MAX_SIGNALS]
     results = await asyncio.gather(*(_classify_one(s) for s in signals), return_exceptions=True)
-    filtered = [
-        sig for sig, result in zip(signals, results)
+    filtered: list[AnalyzedSignal] = [
+        AnalyzedSignal(github_link=sig["github_link"], summary=result.summary)
+        for sig, result in zip(signals, results)
         if not isinstance(result, BaseException) and result.classification not in {"other", "error"}
     ]
     return {"filtered_signals": filtered}

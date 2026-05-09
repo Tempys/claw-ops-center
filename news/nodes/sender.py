@@ -17,9 +17,10 @@ async def sender_node(state: State) -> dict:
         log.info("No signals to send")
         return {}
     for signal in signals:
+        text = f"{signal['github_link']}\n\n{signal['summary']}"
         await _bot.send_message(
             chat_id=config.TELEGRAM_DESTINATION_CHAT_ID,
-            text=signal["github_link"],
+            text=text,
         )
         log.info("Sent: %s", signal["github_link"])
     return {}

@@ -24,7 +24,7 @@ _RUN_INPUT = {
     "email_last_checked": time.time(),
     "email_raw_signals": [],
     "email_seen_hashes": [],
-    "filtered_signals": [],
+    "filtered_signals": None,  # None triggers _replace_or_add to reset to [] each run
 }
 
 # Seed used only when no checkpoint exists yet (first ever run).
