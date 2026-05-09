@@ -21,7 +21,7 @@ STATE_BASE = {
     "telegram_offset_id": 0,
     "telegram_raw_signals": [],
     "telegram_seen_hashes": [],
-    "telegram_extracted_signals": [],
+    "telegram_enriched_signals": [],
     "telegram_id": [],
     "email_last_checked": 0.0,
     "email_raw_signals": [],
@@ -36,9 +36,9 @@ async def test_extract_node_extracts_github_url_and_fetches_readme():
         from news.nodes.telegram_extractor import telegram_extract_node
         result = await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [_RAW_SIGNAL]})
 
-    assert len(result["telegram_extracted_signals"]) == 1
+    assert len(result["telegram_enriched_signals"]) == 1
     assert result["telegram_id"] == [42]
-    sig = result["telegram_extracted_signals"][0]
+    sig = result["telegram_enriched_signals"][0]
     assert sig["github_link"] == "https://github.com/openai/openai-agents"
     assert sig["readme"] == readme
 
@@ -48,7 +48,7 @@ async def test_extract_node_drops_plain_text_signals():
         from news.nodes.telegram_extractor import telegram_extract_node
         result = await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [_PLAIN_SIGNAL]})
 
-    assert result["telegram_extracted_signals"] == []
+    assert result["telegram_enriched_signals"] == []
     assert result["telegram_id"] == []
 
 
@@ -57,7 +57,7 @@ async def test_extract_node_drops_signal_when_readme_fetch_fails():
         from news.nodes.telegram_extractor import telegram_extract_node
         result = await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [_RAW_SIGNAL]})
 
-    assert result["telegram_extracted_signals"] == []
+    assert result["telegram_enriched_signals"] == []
     assert result["telegram_id"] == []
 
 
@@ -76,8 +76,9 @@ async def test_extract_node_passes_correct_fields():
         from news.nodes.telegram_extractor import telegram_extract_node
         result = await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [_RAW_SIGNAL]})
 
-    sig = result["telegram_extracted_signals"][0]
-    assert sig["telegram_id"] == 42
+    sig = result["telegram_enriched_signals"][0]
+    assert sig["title"] == _RAW_SIGNAL["title"]
+    assert sig["source"] == "telegram"
     assert sig["github_link"] == "https://github.com/openai/openai-agents"
     assert sig["readme"] == readme
 
@@ -97,4 +98,4 @@ async def test_extract_node_truncates_readme_to_1500_chars():
         from news.nodes.telegram_extractor import telegram_extract_node
         result = await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [_RAW_SIGNAL]})
 
-    assert len(result["telegram_extracted_signals"][0]["readme"]) == 1500
+    assert len(result["telegram_enriched_signals"][0]["readme"]) == 1500

@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from pyrogram.types import Message
 
 import news.config as config
-from news.state import Signal, State
+from news.state import Signal, TelegramPipelineState
 
 log = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ def _to_signal(message: "Message") -> Signal:
     )
 
 
-async def telegram_collector_node(state: State) -> dict:
+async def telegram_collector_node(state: TelegramPipelineState) -> dict:
     try:
         async with make_client() as client:
             await client.get_chat(config.TELEGRAM_CHANNEL_ID)

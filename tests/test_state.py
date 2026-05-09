@@ -46,21 +46,27 @@ def test_signal_fields():
 
 
 def test_state_has_per_source_raw_signal_fields():
-    from news.state import State
-    s: State = {
+    from news.state import TelegramPipelineState, EmailState
+    tg: TelegramPipelineState = {
         "telegram_offset_id": 0,
         "telegram_raw_signals": [],
         "telegram_seen_hashes": [],
-        "telegram_extracted_signals": [],
+        "telegram_enriched_signals": [],
+        "telegram_id": [],
+        "email_last_checked": 0.0,
+        "email_seen_hashes": [],
+        "filtered_signals": [],
+    }
+    em: EmailState = {
         "email_last_checked": 0.0,
         "email_raw_signals": [],
         "email_seen_hashes": [],
         "filtered_signals": [],
     }
-    assert s["telegram_raw_signals"] == []
-    assert s["email_raw_signals"] == []
-    assert s["telegram_seen_hashes"] == []
-    assert s["email_seen_hashes"] == []
+    assert tg["telegram_raw_signals"] == []
+    assert em["email_raw_signals"] == []
+    assert tg["telegram_seen_hashes"] == []
+    assert em["email_seen_hashes"] == []
 
 
 def test_filtered_signals_reducer_merges_two_lists():
@@ -110,16 +116,16 @@ def test_extract_node_output_fields():
     assert s["github_link"] == "https://github.com/openai/openai-agents"
 
 
-def test_state_has_telegram_extracted_signals_field():
-    from news.state import State
-    s: State = {
+def test_state_has_telegram_enriched_signals_field():
+    from news.state import TelegramPipelineState
+    s: TelegramPipelineState = {
         "telegram_offset_id": 0,
         "telegram_raw_signals": [],
         "telegram_seen_hashes": [],
-        "telegram_extracted_signals": [],
+        "telegram_enriched_signals": [],
+        "telegram_id": [],
         "email_last_checked": 0.0,
-        "email_raw_signals": [],
         "email_seen_hashes": [],
         "filtered_signals": [],
     }
-    assert s["telegram_extracted_signals"] == []
+    assert s["telegram_enriched_signals"] == []

@@ -4,7 +4,7 @@ import re
 
 import httpx
 
-from news.state import ExtractNodeOutput, GitHubSignal, Signal, State
+from news.state import EnrichedSignal, GitHubSignal, Signal, TelegramPipelineState
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ async def _fetch_readme(owner: str, repo: str) -> str:
     return ""
 
 
-async def _extract_one(signal: Signal) -> ExtractNodeOutput | None:
+async def _enrich_one(signal: Signal) -> EnrichedSignal | None:
     gh = _extract_github(signal)
     if gh is None:
         return None
@@ -48,18 +48,18 @@ async def _extract_one(signal: Signal) -> ExtractNodeOutput | None:
     if not readme:
         return None
     github_link = f"https://github.com/{gh['repo_owner']}/{gh['repo_name']}"
-    return ExtractNodeOutput(
-        telegram_id=signal["telegram_id"],
+    return EnrichedSignal(
+        title=signal["title"],
+        source=signal["source"],
         github_link=github_link,
         readme=readme,
     )
 
 
-async def telegram_extract_node(state: State) -> dict:
+async def telegram_extract_node(state: TelegramPipelineState) -> dict:
     signals = state["telegram_raw_signals"]
-    results = await asyncio.gather(*(_extract_one(s) for s in signals))
-    extracted = [r for r in results if r is not None]
+    results = await asyncio.gather(*(_enrich_one(s) for s in signals))
+    enriched = [r for r in results if r is not None]
     return {
-        "telegram_extracted_signals": extracted,
-        "telegram_id": signal["telegram_id"],
+        "telegram_enriched_signals": enriched,
     }

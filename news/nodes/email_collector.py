@@ -7,7 +7,7 @@ from datetime import datetime
 from email.header import decode_header as _raw_decode
 
 import news.config as config
-from news.state import Signal, State
+from news.state import EmailState, Signal
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def fetch_emails_since(since_timestamp: float) -> list[dict]:
     return results
 
 
-async def email_collector_node(state: State) -> dict:
+async def email_collector_node(state: EmailState) -> dict:
     if not config.EMAIL_HOST:
         log.info("Email not configured, skipping")
         return {"email_raw_signals": []}
@@ -72,4 +72,12 @@ async def email_collector_node(state: State) -> dict:
         return {"email_last_checked": now, "email_raw_signals": signals}
     except Exception as exc:
         log.debug(f"Email collector failed: {exc}")
-        return {"email_raw_signals": []}
+        return {
+            "email_raw_signals": [Signal(
+                telegram_id=0,
+                title="Email collector failed",
+                classification="error",
+                summary=str(exc),
+                source="email",
+            )]
+        }

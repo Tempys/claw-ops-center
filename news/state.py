@@ -37,19 +37,30 @@ class ExtractNodeOutput(TypedDict):
     readme: str
 
 
+class EnrichedSignal(TypedDict):
+    title: str
+    source: str
+    github_link: str
+    readme: str
+
+
 def _list_union(a: list[str], b: list[str]) -> list[str]:
     """Merge two hash lists, preserving order and deduplicating."""
     seen = set(a)
     return a + [x for x in b if x not in seen]
 
 
-class TelegramState(TypedDict):
+class State(TypedDict):
+    """Persistent state — survives across scheduler invocations."""
     telegram_offset_id: int
+    email_last_checked: float
+    email_seen_hashes: Annotated[list[str], _list_union]
+
+class TelegramPipelineState(State):
+    """Transient telegram fields, only needed within the telegram sub-graph."""
     telegram_raw_signals: list[Signal]
-    telegram_seen_hashes: Annotated[list[str], _list_union]
-    telegram_extracted_signals: list[ExtractNodeOutput]
+    telegram_enriched_signals: list[EnrichedSignal]
     telegram_id: list[int]
-    filtered_signals: Annotated[list[Signal], operator.add]
 
 
 class EmailState(TypedDict):
@@ -57,7 +68,3 @@ class EmailState(TypedDict):
     email_raw_signals: list[Signal]
     email_seen_hashes: Annotated[list[str], _list_union]
     filtered_signals: Annotated[list[Signal], operator.add]
-
-
-class State(TelegramState, EmailState):
-    pass

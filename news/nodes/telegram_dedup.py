@@ -1,11 +1,23 @@
 # news/nodes/telegram_dedup.py
-from news.state import Signal, State
+import hashlib
+
+from news.state import TelegramPipelineState
 
 
-async def telegram_dedup_node(state: State) -> dict:
-    seen: set[tuple] = set()
-    deduped = [
-        s for s in state["telegram_raw_signals"]
-        if (k := (s["title"], s["summary"])) not in seen and not seen.add(k)
-    ]
-    return {"telegram_raw_signals": deduped}
+def _signal_hash(signal: dict) -> str:
+    return hashlib.sha256(f"{signal['title']}|{signal['summary']}".encode()).hexdigest()
+
+
+async def telegram_dedup_node(state: TelegramPipelineState) -> dict:
+    seen = set()
+    deduped = []
+
+    for s in state["telegram_raw_signals"]:
+        h = _signal_hash(s)
+        if h not in seen:
+            deduped.append(s)
+            seen.add(h)
+
+    return {
+        "telegram_raw_signals": deduped,
+    }

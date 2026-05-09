@@ -30,15 +30,15 @@ async def _classify_batch(signals: list[Signal], system_prompt: str) -> list[Sig
         return signals
 
     try:
-        response = await _client.responses.create(
+        response = await _client.chat.completions.create(
             model="gpt-4o-mini",
-            max_output_tokens=512,
-            input=[
+            max_tokens=512,
+            messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": _format_signals(non_error)},
             ],
         )
-        items = json.loads(response.output_text)
+        items = json.loads(response.choices[0].message.content)
         index_map = {
             item["index"]: item["classification"]
             for item in items

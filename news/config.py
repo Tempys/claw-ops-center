@@ -1,8 +1,12 @@
 from pathlib import Path
 
+import dotenv
+from pydantic import ValidationError
 from pydantic_settings import BaseSettings
 
 _ENV_FILE = Path(__file__).parent.parent / ".env"
+
+dotenv.load_dotenv(_ENV_FILE)
 
 
 class Settings(BaseSettings):
@@ -19,10 +23,13 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     CHECKPOINT_DB_PATH: str = "checkpoints.db"
 
-    model_config = {"env_file": str(_ENV_FILE), "case_sensitive": True}
+    model_config = {"case_sensitive": True}
 
 
-_s = Settings()
+try:
+    _s = Settings()
+except ValidationError as exc:
+    raise ValueError(str(exc)) from exc
 
 
 def __getattr__(name: str):

@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 import news.config as config
 from news.prompts import load_prompt
-from news.state import ExtractNodeOutput, State
+from news.state import EnrichedSignal, TelegramPipelineState
 
 log = logging.getLogger(__name__)
 
@@ -47,9 +47,9 @@ def _clean_text(text: str) -> str:
     return _STARS_TREND_RE.sub("", text).strip()
 
 
-async def _classify_one(signal: ExtractNodeOutput) -> ClassificationResult:
+async def _classify_one(signal: EnrichedSignal) -> ClassificationResult:
     readme_text = _clean_text(signal["readme"])
-    content = f"GitHub: {signal['github_link']}\n\nREADME:\n{readme_text}"
+    content = f"GitHub: {signal['github_link']}\n\nGitHub README excerpt:\n{readme_text}"
 
     resp = await _client.beta.chat.completions.parse(
         model=_MODEL,
@@ -66,8 +66,8 @@ async def _classify_one(signal: ExtractNodeOutput) -> ClassificationResult:
     return result
 
 
-async def telegram_analyze_node(state: State) -> dict:
-    signals = state["telegram_extracted_signals"][:_MAX_SIGNALS]
+async def telegram_analyze_node(state: TelegramPipelineState) -> dict:
+    signals = state["telegram_enriched_signals"][:_MAX_SIGNALS]
     results = await asyncio.gather(*(_classify_one(s) for s in signals), return_exceptions=True)
     filtered = [
         sig for sig, result in zip(signals, results)
