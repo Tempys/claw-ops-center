@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, patch
 
 import news.config as config
 
@@ -7,8 +7,14 @@ STATE_WITH_SIGNALS = {
     "email_last_checked": 0.0,
     "signals": [],
     "filtered_signals": [
-        {"github_link": "https://github.com/langchain-ai/langgraph", "summary": "LangGraph major release"},
-        {"github_link": "https://github.com/microsoft/autogen", "summary": "AutoGen 0.4 released"},
+        {
+            "github_link": "https://github.com/langchain-ai/langgraph",
+            "summary": "LangGraph major release",
+        },
+        {
+            "github_link": "https://github.com/microsoft/autogen",
+            "summary": "AutoGen 0.4 released",
+        },
     ],
 }
 
@@ -26,6 +32,7 @@ async def test_sends_each_filtered_signal_as_separate_message():
 
     with patch("news.nodes.sender._bot", mock_bot):
         from news.nodes.sender import sender_node
+
         result = await sender_node(STATE_WITH_SIGNALS)
 
     assert mock_bot.send_message.call_count == 2
@@ -46,6 +53,7 @@ async def test_sends_nothing_when_filtered_signals_empty():
 
     with patch("news.nodes.sender._bot", mock_bot):
         from news.nodes.sender import sender_node
+
         result = await sender_node(STATE_EMPTY)
 
     mock_bot.send_message.assert_not_called()
@@ -58,6 +66,7 @@ async def test_returns_empty_dict():
 
     with patch("news.nodes.sender._bot", mock_bot):
         from news.nodes.sender import sender_node
+
         result = await sender_node(STATE_EMPTY)
 
     assert result == {}

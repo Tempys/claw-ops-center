@@ -11,11 +11,14 @@ def _make_openai_response(text: str) -> MagicMock:
 
 # ── _classify_batch tests ───────────────────────────────────────────────────
 
+
 async def test_classify_pass_updates_signal_classification():
-    classify_json = json.dumps([
-        {"index": 1, "classification": "ai_agent_framework"},
-        {"index": 2, "classification": "other"},
-    ])
+    classify_json = json.dumps(
+        [
+            {"index": 1, "classification": "ai_agent_framework"},
+            {"index": 2, "classification": "other"},
+        ]
+    )
     mock_client = AsyncMock()
     mock_client.chat.completions.create = AsyncMock(
         return_value=_make_openai_response(classify_json)
@@ -23,8 +26,12 @@ async def test_classify_pass_updates_signal_classification():
 
     with patch("news.nodes.analyzer._client", mock_client):
         from news.nodes.analyzer import _classify_batch
+
         signals = [
-            {"url": "https://github.com/langchain-ai/langgraph", "classification": "other"},
+            {
+                "url": "https://github.com/langchain-ai/langgraph",
+                "classification": "other",
+            },
             {"url": "https://coinmarketcap.com/btc", "classification": "other"},
         ]
         result = await _classify_batch(signals, "test prompt")
@@ -41,8 +48,12 @@ async def test_classify_pass_falls_back_to_other_on_invalid_json():
 
     with patch("news.nodes.analyzer._client", mock_client):
         from news.nodes.analyzer import _classify_batch
+
         signals = [
-            {"url": "https://github.com/langchain-ai/langgraph", "classification": "other"},
+            {
+                "url": "https://github.com/langchain-ai/langgraph",
+                "classification": "other",
+            },
         ]
         result = await _classify_batch(signals, "test prompt")
 
@@ -58,6 +69,7 @@ async def test_classify_pass_coerces_unknown_category_to_other():
 
     with patch("news.nodes.analyzer._client", mock_client):
         from news.nodes.analyzer import _classify_batch
+
         signals = [
             {"url": "https://github.com/some/repo", "classification": "other"},
         ]
@@ -75,6 +87,7 @@ async def test_classify_pass_coerces_error_classification_to_other():
 
     with patch("news.nodes.analyzer._client", mock_client):
         from news.nodes.analyzer import _classify_batch
+
         signals = [
             {"url": "https://github.com/some/repo", "classification": "other"},
         ]

@@ -1,15 +1,18 @@
 # news/runner.py
 import asyncio
-asyncio.set_event_loop(asyncio.new_event_loop())  # pyrogram sync.py calls get_event_loop() at import time (Python 3.12+ no longer auto-creates one)
 
-import logging
-import time
+asyncio.set_event_loop(
+    asyncio.new_event_loop()
+)  # pyrogram sync.py calls get_event_loop() at import time (Python 3.12+ no longer auto-creates one)
 
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+import logging  # noqa: E402
+import time  # noqa: E402
 
-import news.config as config
-from news.graph import create_graph
-from news.state import State
+from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver  # noqa: E402
+
+import news.config as config  # noqa: E402
+from news.graph import create_graph  # noqa: E402
+from news.state import State  # noqa: E402
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -32,7 +35,9 @@ _FIRST_RUN_SEED: State = {**_RUN_INPUT, "telegram_offset_id": 0}  # type: ignore
 
 
 async def main() -> None:
-    async with AsyncSqliteSaver.from_conn_string(config.CHECKPOINT_DB_PATH) as checkpointer:
+    async with AsyncSqliteSaver.from_conn_string(
+        config.CHECKPOINT_DB_PATH
+    ) as checkpointer:
         graph = create_graph().compile(checkpointer=checkpointer)
         snapshot = await graph.aget_state(_RUN_CONFIG)
         invoke_input = _FIRST_RUN_SEED if not snapshot.values else _RUN_INPUT

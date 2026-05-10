@@ -1,9 +1,9 @@
 # news/pipelines/telegram.py
 from langgraph.graph import END, START, StateGraph
 
+from news.nodes.telegram_analyzer import telegram_analyze_node
 from news.nodes.telegram_collector import telegram_collector_node
 from news.nodes.telegram_extractor import telegram_extract_node
-from news.nodes.telegram_analyzer import telegram_analyze_node
 from news.state import TelegramPipelineState
 
 

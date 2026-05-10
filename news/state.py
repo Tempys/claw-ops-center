@@ -1,7 +1,6 @@
-import operator
 from typing import Annotated, Literal
-from typing_extensions import TypedDict
 
+from typing_extensions import TypedDict
 
 CLASSIFICATION = Literal[
     "ai_agent_framework",
@@ -18,7 +17,6 @@ CLASSIFICATION = Literal[
 class Signal(TypedDict):
     telegram_id: int
     url: str
-
 
 
 class ExtractNodeOutput(TypedDict):
@@ -58,13 +56,16 @@ def _replace_or_add(a: list | None, b: list | None) -> list:
 
 class State(TypedDict):
     """Persistent state — survives across scheduler invocations."""
+
     telegram_offset_id: int
     email_last_checked: Annotated[float, _take_max]
     email_seen_hashes: Annotated[list[str], _list_union]
     filtered_signals: Annotated[list[AnalyzedSignal], _replace_or_add]
 
+
 class TelegramPipelineState(State):
     """Transient telegram fields, only needed within the telegram sub-graph."""
+
     telegram_raw_signals: list[Signal]
     telegram_enriched_signals: list[EnrichedSignal]
     telegram_id: list[int]

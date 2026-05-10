@@ -1,13 +1,11 @@
-import asyncio
 import email
 import imaplib
 import logging
-import time
 from datetime import datetime
 from email.header import decode_header as _raw_decode
 
 import news.config as config
-from news.state import EmailState, Signal
+from news.state import EmailState
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +28,9 @@ def _body(msg: email.message.Message) -> str:
         for part in msg.walk():
             if part.get_content_type() == "text/plain":
                 payload = part.get_payload(decode=True)
-                return payload.decode("utf-8", errors="replace")[:1000] if payload else ""
+                return (
+                    payload.decode("utf-8", errors="replace")[:1000] if payload else ""
+                )
     payload = msg.get_payload(decode=True)
     return payload.decode("utf-8", errors="replace")[:1000] if payload else ""
 
@@ -42,14 +42,16 @@ def fetch_emails_since(since_timestamp: float) -> list[dict]:
         imap.login(config.EMAIL_USERNAME, config.EMAIL_PASSWORD)
         imap.select("INBOX")
         _, msg_ids = imap.search(None, f"SINCE {since_date}")
-        for msg_id in (msg_ids[0].split() if msg_ids[0] else []):
+        for msg_id in msg_ids[0].split() if msg_ids[0] else []:
             _, data = imap.fetch(msg_id, "(RFC822)")
             msg = email.message_from_bytes(data[0][1])
-            results.append({
-                "subject": _decode(msg.get("Subject")),
-                "body": _body(msg),
-                "sender": _decode(msg.get("From")),
-            })
+            results.append(
+                {
+                    "subject": _decode(msg.get("Subject")),
+                    "body": _body(msg),
+                    "sender": _decode(msg.get("From")),
+                }
+            )
     return results
 
 
