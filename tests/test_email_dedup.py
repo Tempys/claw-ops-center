@@ -3,7 +3,8 @@ from news.nodes.email_dedup import email_dedup_node
 
 
 def _sig(title: str, summary: str = "") -> dict:
-    return {"title": title, "classification": "other", "summary": summary, "source": "email"}
+    url = f"https://mail.example.com/{title.lower().replace(' ', '-')}"
+    return {"url": url, "title": title, "classification": "other", "summary": summary, "source": "email"}
 
 
 STATE_BASE = {
@@ -49,9 +50,3 @@ async def test_does_not_re_add_existing_hash():
     assert result["email_seen_hashes"] == []
 
 
-async def test_error_email_signals_pass_through_without_hashing():
-    error_sig = {"title": "err", "classification": "error", "summary": "fail", "source": "email"}
-    state = {**STATE_BASE, "email_raw_signals": [error_sig]}
-    result = await email_dedup_node(state)
-    assert len(result["email_raw_signals"]) == 1
-    assert result["email_seen_hashes"] == []

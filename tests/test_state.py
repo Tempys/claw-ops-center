@@ -86,22 +86,9 @@ def test_seen_hashes_reducer_deduplicates():
     from typing import get_type_hints, get_args
 
     hints = get_type_hints(state_module.State, include_extras=True)
-    annotation = hints["telegram_seen_hashes"]
+    annotation = hints["email_seen_hashes"]
     reducer = get_args(annotation)[1]
     assert reducer(["a", "b"], ["b", "c"]) == ["a", "b", "c"]
-
-
-def test_github_signal_fields():
-    from news.state import GitHubSignal
-    s: GitHubSignal = {
-        "title": "OpenAI Agents",
-        "summary": "https://github.com/openai/openai-agents",
-        "source": "telegram",
-        "repo_owner": "openai",
-        "repo_name": "openai-agents",
-    }
-    assert s["repo_owner"] == "openai"
-    assert s["repo_name"] == "openai-agents"
 
 
 def test_extract_node_output_fields():

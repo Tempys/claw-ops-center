@@ -3,18 +3,12 @@ from unittest.mock import AsyncMock, patch
 
 _RAW_SIGNAL = {
     "telegram_id": 42,
-    "title": "Check out https://github.com/openai/openai-agents",
-    "classification": "other",
-    "summary": "Check out https://github.com/openai/openai-agents",
-    "source": "telegram",
+    "url": "https://github.com/openai/openai-agents",
 }
 
 _PLAIN_SIGNAL = {
     "telegram_id": 99,
-    "title": "BTC is up",
-    "classification": "other",
-    "summary": "BTC up 5% today",
-    "source": "telegram",
+    "url": "",
 }
 
 STATE_BASE = {
@@ -37,7 +31,6 @@ async def test_extract_node_extracts_github_url_and_fetches_readme():
         result = await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [_RAW_SIGNAL]})
 
     assert len(result["telegram_enriched_signals"]) == 1
-    assert result["telegram_id"] == [42]
     sig = result["telegram_enriched_signals"][0]
     assert sig["github_link"] == "https://github.com/openai/openai-agents"
     assert sig["readme"] == readme
@@ -49,7 +42,6 @@ async def test_extract_node_drops_plain_text_signals():
         result = await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [_PLAIN_SIGNAL]})
 
     assert result["telegram_enriched_signals"] == []
-    assert result["telegram_id"] == []
 
 
 async def test_extract_node_drops_signal_when_readme_fetch_fails():
@@ -58,11 +50,10 @@ async def test_extract_node_drops_signal_when_readme_fetch_fails():
         result = await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [_RAW_SIGNAL]})
 
     assert result["telegram_enriched_signals"] == []
-    assert result["telegram_id"] == []
 
 
 async def test_extract_node_strips_trailing_punctuation_from_repo_name():
-    signal = {**_RAW_SIGNAL, "summary": "See https://github.com/openai/openai-agents."}
+    signal = {**_RAW_SIGNAL, "url": "https://github.com/openai/openai-agents."}
     with patch("news.nodes.telegram_extractor._fetch_readme", AsyncMock(return_value="# Agents")) as mock_fetch:
         from news.nodes.telegram_extractor import telegram_extract_node
         await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [signal]})
@@ -77,14 +68,12 @@ async def test_extract_node_passes_correct_fields():
         result = await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [_RAW_SIGNAL]})
 
     sig = result["telegram_enriched_signals"][0]
-    assert sig["title"] == _RAW_SIGNAL["title"]
-    assert sig["source"] == "telegram"
     assert sig["github_link"] == "https://github.com/openai/openai-agents"
     assert sig["readme"] == readme
 
 
 async def test_extract_node_drops_signal_with_comma_terminated_url():
-    signal = {**_RAW_SIGNAL, "summary": "Check out https://github.com/openai/openai-agents, it is great."}
+    signal = {**_RAW_SIGNAL, "url": "https://github.com/openai/openai-agents,"}
     with patch("news.nodes.telegram_extractor._fetch_readme", AsyncMock(return_value="# README")) as mock_fetch:
         from news.nodes.telegram_extractor import telegram_extract_node
         await telegram_extract_node({**STATE_BASE, "telegram_raw_signals": [signal]})

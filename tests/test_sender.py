@@ -7,8 +7,8 @@ STATE_WITH_SIGNALS = {
     "email_last_checked": 0.0,
     "signals": [],
     "filtered_signals": [
-        {"title": "LangGraph 2.0", "classification": "ai_agent_framework", "summary": "LangGraph major release", "source": "telegram"},
-        {"title": "AutoGen update", "classification": "ai_agent_framework", "summary": "AutoGen 0.4 released", "source": "telegram"},
+        {"github_link": "https://github.com/langchain-ai/langgraph", "summary": "LangGraph major release"},
+        {"github_link": "https://github.com/microsoft/autogen", "summary": "AutoGen 0.4 released"},
     ],
 }
 
@@ -31,11 +31,11 @@ async def test_sends_each_filtered_signal_as_separate_message():
     assert mock_bot.send_message.call_count == 2
     mock_bot.send_message.assert_any_call(
         chat_id=config.TELEGRAM_DESTINATION_CHAT_ID,
-        text="LangGraph major release",
+        text="https://github.com/langchain-ai/langgraph\n\nLangGraph major release",
     )
     mock_bot.send_message.assert_any_call(
         chat_id=config.TELEGRAM_DESTINATION_CHAT_ID,
-        text="AutoGen 0.4 released",
+        text="https://github.com/microsoft/autogen\n\nAutoGen 0.4 released",
     )
     assert result == {}
 

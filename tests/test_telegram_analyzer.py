@@ -7,6 +7,7 @@ def _make_parse_response(cls: str, description: str = "A project", reason: str =
     parsed.classification = cls
     parsed.description = description
     parsed.reason = reason
+    parsed.summary = f"{description} — {reason}".removesuffix(" —")
     message = MagicMock()
     message.parsed = parsed
     choice = MagicMock()
@@ -54,8 +55,8 @@ async def test_analyze_node_classifies_enriched_signals():
 
     assert len(result["filtered_signals"]) == 1
     sig = result["filtered_signals"][0]
-    assert sig["title"] == "LangGraph 2.0 drops"
     assert sig["github_link"] == "https://github.com/some-owner/some-repo"
+    assert "LangGraph agent framework" in sig["summary"]
 
 
 async def test_analyze_node_returns_empty_when_all_other():
@@ -83,9 +84,8 @@ async def test_analyze_node_passes_enriched_signal_through():
 
     assert len(result["filtered_signals"]) == 1
     sig = result["filtered_signals"][0]
-    assert sig["title"] == "Tool X"
-    assert sig["readme"] == "# Tool X docs"
     assert sig["github_link"] == "https://github.com/some-owner/some-repo"
+    assert sig["summary"] == "A project — It fits"
 
 
 async def test_analyze_node_includes_readme_in_prompt():

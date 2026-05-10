@@ -24,8 +24,8 @@ async def test_classify_pass_updates_signal_classification():
     with patch("news.nodes.analyzer._client", mock_client):
         from news.nodes.analyzer import _classify_batch
         signals = [
-            {"title": "LangGraph 2.0 drops", "classification": "other", "summary": "Major LangGraph release", "source": "telegram"},
-            {"title": "BTC price update", "classification": "other", "summary": "BTC up 5%", "source": "telegram"},
+            {"url": "https://github.com/langchain-ai/langgraph", "classification": "other"},
+            {"url": "https://coinmarketcap.com/btc", "classification": "other"},
         ]
         result = await _classify_batch(signals, "test prompt")
 
@@ -42,7 +42,7 @@ async def test_classify_pass_falls_back_to_other_on_invalid_json():
     with patch("news.nodes.analyzer._client", mock_client):
         from news.nodes.analyzer import _classify_batch
         signals = [
-            {"title": "LangGraph 2.0 drops", "classification": "other", "summary": "Major LangGraph release", "source": "telegram"},
+            {"url": "https://github.com/langchain-ai/langgraph", "classification": "other"},
         ]
         result = await _classify_batch(signals, "test prompt")
 
@@ -59,28 +59,11 @@ async def test_classify_pass_coerces_unknown_category_to_other():
     with patch("news.nodes.analyzer._client", mock_client):
         from news.nodes.analyzer import _classify_batch
         signals = [
-            {"title": "Some signal", "classification": "other", "summary": "content", "source": "telegram"},
+            {"url": "https://github.com/some/repo", "classification": "other"},
         ]
         result = await _classify_batch(signals, "test prompt")
 
     assert result[0]["classification"] == "other"
-
-
-async def test_error_only_batch_skips_classify_call():
-    mock_client = AsyncMock()
-    mock_client.chat.completions.create = AsyncMock(
-        return_value=_make_openai_response("Digest text")
-    )
-
-    with patch("news.nodes.analyzer._client", mock_client):
-        from news.nodes.analyzer import _classify_batch
-        signals = [
-            {"title": "Collector failed", "classification": "error", "summary": "err", "source": "telegram"},
-        ]
-        result = await _classify_batch(signals, "test prompt")
-
-    mock_client.chat.completions.create.assert_not_called()
-    assert result[0]["classification"] == "error"
 
 
 async def test_classify_pass_coerces_error_classification_to_other():
@@ -93,7 +76,7 @@ async def test_classify_pass_coerces_error_classification_to_other():
     with patch("news.nodes.analyzer._client", mock_client):
         from news.nodes.analyzer import _classify_batch
         signals = [
-            {"title": "Some signal", "classification": "other", "summary": "content", "source": "telegram"},
+            {"url": "https://github.com/some/repo", "classification": "other"},
         ]
         result = await _classify_batch(signals, "test prompt")
 
