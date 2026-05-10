@@ -1,9 +1,9 @@
 # news/pipelines/email.py
 from langgraph.graph import END, START, StateGraph
 
+from news.nodes.email_analyzer import email_analyze_node
 from news.nodes.email_collector import email_collector_node
 from news.nodes.email_dedup import email_dedup_node
-from news.nodes.email_analyzer import email_analyze_node
 from news.state import EmailState
 
 

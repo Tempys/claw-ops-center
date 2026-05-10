@@ -30,6 +30,7 @@ class ClassificationResult(BaseModel):
     ]
     description: str
     reason: str
+
     @property
     def summary(self) -> str:
         return f"{self.description} — {self.reason}".removesuffix(" —")
@@ -37,7 +38,9 @@ class ClassificationResult(BaseModel):
 
 _SYSTEM = load_prompt(
     "telegram_classify",
-    categories=", ".join(list(get_args(ClassificationResult.model_fields["classification"].annotation))),
+    categories=", ".join(
+        list(get_args(ClassificationResult.model_fields["classification"].annotation))
+    ),
 )
 
 _STARS_TREND_RE = re.compile(r"Stars trend:.*", re.DOTALL | re.IGNORECASE)
@@ -49,7 +52,9 @@ def _clean_text(text: str) -> str:
 
 async def _classify_one(signal: EnrichedSignal) -> ClassificationResult:
     readme_text = _clean_text(signal["readme"])
-    content = f"GitHub: {signal['github_link']}\n\nGitHub README excerpt:\n{readme_text}"
+    content = (
+        f"GitHub: {signal['github_link']}\n\nGitHub README excerpt:\n{readme_text}"
+    )
 
     resp = await _client.beta.chat.completions.parse(
         model=_MODEL,
@@ -68,10 +73,13 @@ async def _classify_one(signal: EnrichedSignal) -> ClassificationResult:
 
 async def telegram_analyze_node(state: TelegramPipelineState) -> dict:
     signals = state["telegram_enriched_signals"][:_MAX_SIGNALS]
-    results = await asyncio.gather(*(_classify_one(s) for s in signals), return_exceptions=True)
+    results = await asyncio.gather(
+        *(_classify_one(s) for s in signals), return_exceptions=True
+    )
     filtered: list[AnalyzedSignal] = [
         AnalyzedSignal(github_link=sig["github_link"], summary=result.summary)
-        for sig, result in zip(signals, results)
-        if not isinstance(result, BaseException) and result.classification not in {"other", "error"}
+        for sig, result in zip(signals, results, strict=False)
+        if not isinstance(result, BaseException)
+        and result.classification not in {"other", "error"}
     ]
     return {"filtered_signals": filtered}

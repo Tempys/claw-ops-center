@@ -26,6 +26,7 @@ async def test_returns_signals_and_updates_offset():
 
     with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
         from news.nodes.telegram_collector import telegram_collector_node
+
         result = await telegram_collector_node(STATE)
 
     assert result["telegram_offset_id"] == 200
@@ -46,6 +47,7 @@ async def test_returns_empty_dict_when_no_messages():
 
     with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
         from news.nodes.telegram_collector import telegram_collector_node
+
         result = await telegram_collector_node(STATE)
 
     assert result == {}
@@ -63,6 +65,7 @@ async def test_returns_error_signal_and_preserves_offset_on_exception():
 
     with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
         from news.nodes.telegram_collector import telegram_collector_node
+
         result = await telegram_collector_node(STATE)
 
     assert result == {}
@@ -81,6 +84,7 @@ async def test_signal_default_classification_is_other():
 
     with patch("news.nodes.telegram_collector.make_client", return_value=mock_client):
         from news.nodes.telegram_collector import telegram_collector_node
+
         result = await telegram_collector_node(STATE)
 
     assert result["telegram_raw_signals"][0]["telegram_id"] == 300
@@ -89,8 +93,10 @@ async def test_signal_default_classification_is_other():
 
 # --- _to_signal unit tests ---
 
+
 def _make_text_link_entity(url: str):
     from pyrogram.enums import MessageEntityType
+
     entity = MagicMock()
     entity.type = MessageEntityType.TEXT_LINK
     entity.url = url
@@ -99,6 +105,7 @@ def _make_text_link_entity(url: str):
 
 def _make_bold_entity():
     from pyrogram.enums import MessageEntityType
+
     entity = MagicMock()
     entity.type = MessageEntityType.BOLD
     entity.url = None

@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 def test_config_reads_all_env_vars():
     import news.config as cfg
+
     importlib.reload(cfg)
     assert cfg.TELEGRAM_API_ID == 12345678
     assert cfg.TELEGRAM_API_HASH == "test_hash"
@@ -23,15 +24,17 @@ def test_config_default_checkpoint_path():
     env.pop("CHECKPOINT_DB_PATH", None)
     with patch.dict(os.environ, env, clear=True):
         import news.config as cfg
+
         importlib.reload(cfg)
         assert cfg.CHECKPOINT_DB_PATH == "checkpoints.db"
 
 
 def test_missing_required_var_raises():
     env = {k: v for k, v in os.environ.items() if k != "OPENAI_API_KEY"}
-    with patch.dict(os.environ, env, clear=True):
-        with patch('dotenv.load_dotenv'):
-            import news.config as cfg
-            import pytest
-            with pytest.raises(ValueError, match="OPENAI_API_KEY"):
-                importlib.reload(cfg)
+    with patch.dict(os.environ, env, clear=True), patch("dotenv.load_dotenv"):
+        import pytest
+
+        import news.config as cfg
+
+        with pytest.raises(ValueError, match="OPENAI_API_KEY"):
+            importlib.reload(cfg)

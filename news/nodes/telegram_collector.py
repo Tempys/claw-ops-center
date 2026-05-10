@@ -13,6 +13,7 @@ log = logging.getLogger(__name__)
 
 def make_client() -> "Client":
     from pyrogram import Client
+
     return Client(
         "claw_session",
         api_id=config.TELEGRAM_API_ID,
@@ -23,6 +24,7 @@ def make_client() -> "Client":
 
 def _to_signal(message: "Message") -> Signal:
     from pyrogram.enums import MessageEntityType
+
     url = ""
     entities = message.entities or message.caption_entities or []
     for entity in entities:
@@ -40,7 +42,8 @@ async def telegram_collector_node(state: TelegramPipelineState) -> dict:
         async with make_client() as client:
             await client.get_chat(config.TELEGRAM_CHANNEL_ID)
             messages = [
-                m async for m in client.get_chat_history(
+                m
+                async for m in client.get_chat_history(
                     config.TELEGRAM_CHANNEL_ID,
                     limit=3,
                     offset_id=state.get("telegram_offset_id"),
@@ -52,8 +55,6 @@ async def telegram_collector_node(state: TelegramPipelineState) -> dict:
             return {}
         return {
             "telegram_offset_id": messages[0].id,
-
-
             "telegram_raw_signals": [_to_signal(m) for m in messages],
         }
     except Exception as exc:

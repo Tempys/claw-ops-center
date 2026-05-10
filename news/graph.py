@@ -1,9 +1,9 @@
 # news/graph.py
 from langgraph.graph import END, START, StateGraph
 
-from news.pipelines.telegram import build_telegram_pipeline
-from news.pipelines.email import build_email_pipeline
 from news.nodes.sender import sender_node
+from news.pipelines.email import build_email_pipeline
+from news.pipelines.telegram import build_telegram_pipeline
 from news.state import State
 
 
@@ -27,7 +27,9 @@ def create_graph() -> StateGraph:
     builder.add_edge(START, "email_pipeline")
     builder.add_edge("telegram_pipeline", "merge")
     builder.add_edge("email_pipeline", "merge")
-    builder.add_conditional_edges("merge", _route_after_merge, {"sender": "sender", END: END})
+    builder.add_conditional_edges(
+        "merge", _route_after_merge, {"sender": "sender", END: END}
+    )
     builder.add_edge("sender", END)
 
     return builder
