@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "news": "./news/graph.py:make_graph"
+  },
+  "env": ".env"
+}

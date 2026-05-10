@@ -1,5 +1,7 @@
 venv/
+.venv/
 __pycache__/
+.langgraph_api/
 *.pyc
 .env
 checkpoints.db
@@ -7,4 +9,4 @@ checkpoints.db
 .idea/
 .pytest_cache/
 .worktrees/
-.claude/
+/.claude/settings.local.json
