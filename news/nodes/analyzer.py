@@ -18,7 +18,14 @@ _CLASSIFIABLE = _VALID_CLASSIFICATIONS - {"error"}
 def _format_signals(signals: list[Signal]) -> str:
     lines = ["Signals collected this run:\n"]
     for i, s in enumerate(signals, 1):
-        lines.append(f"{i}. {s['url']}\n")
+        block = [f"{i}. {s['url']}"]
+        # Email signals carry subject/body; include them so the classifier sees
+        # content, not just a URL (URL-only signals, e.g. Telegram, stay terse).
+        if s.get("title"):
+            block.append(f"   Subject: {s['title']}")
+        if s.get("summary"):
+            block.append(f"   Content: {s['summary'][:500]}")
+        lines.append("\n".join(block) + "\n")
     return "\n".join(lines)
 
 

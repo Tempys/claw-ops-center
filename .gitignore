@@ -6,6 +6,8 @@ __pycache__/
 .env
 checkpoints.db
 *.session
+gmail_token.json
+gmail_credentials.json
 .idea/
 .pytest_cache/
 .worktrees/
