@@ -1,59 +1,50 @@
-import email
-import imaplib
+import asyncio
 import logging
-from datetime import datetime
-from email.header import decode_header as _raw_decode
 
 import news.config as config
+from news.nodes import gmail_client
 from news.state import EmailState
 
 log = logging.getLogger(__name__)
 
 
-def _decode(value) -> str:
-    if value is None:
-        return ""
-    parts = _raw_decode(str(value))
-    out = []
-    for part, enc in parts:
-        if isinstance(part, bytes):
-            out.append(part.decode(enc or "utf-8", errors="replace"))
-        else:
-            out.append(part)
-    return " ".join(out)
+def _to_signal(msg: dict) -> dict:
+    """Map a fetched Gmail message to the email-pipeline signal shape.
 
-
-def _body(msg: email.message.Message) -> str:
-    if msg.is_multipart():
-        for part in msg.walk():
-            if part.get_content_type() == "text/plain":
-                payload = part.get_payload(decode=True)
-                return (
-                    payload.decode("utf-8", errors="replace")[:1000] if payload else ""
-                )
-    payload = msg.get_payload(decode=True)
-    return payload.decode("utf-8", errors="replace")[:1000] if payload else ""
-
-
-def fetch_emails_since(since_timestamp: float) -> list[dict]:
-    since_date = datetime.fromtimestamp(since_timestamp).strftime("%d-%b-%Y")
-    results = []
-    with imaplib.IMAP4_SSL(config.EMAIL_HOST, config.EMAIL_PORT) as imap:
-        imap.login(config.EMAIL_USERNAME, config.EMAIL_PASSWORD)
-        imap.select("INBOX")
-        _, msg_ids = imap.search(None, f"SINCE {since_date}")
-        for msg_id in msg_ids[0].split() if msg_ids[0] else []:
-            _, data = imap.fetch(msg_id, "(RFC822)")
-            msg = email.message_from_bytes(data[0][1])
-            results.append(
-                {
-                    "subject": _decode(msg.get("Subject")),
-                    "body": _body(msg),
-                    "sender": _decode(msg.get("From")),
-                }
-            )
-    return results
+    Matches the dict shape the rest of the email pipeline expects:
+    ``url`` (used for dedup hashing + dropped into the classifier),
+    ``title`` (subject), ``summary`` (body excerpt), ``source``.
+    """
+    return {
+        "url": msg["permalink"],
+        "title": msg.get("subject", ""),
+        "summary": (msg.get("body") or msg.get("snippet") or "")[:1500],
+        "source": "email",
+    }
 
 
 async def email_collector_node(state: EmailState) -> dict:
-    return {"email_raw_signals": []}
+    """Fetch recent Gmail messages and emit them as raw email signals.
+
+    Degrades gracefully: if Gmail is not configured (no OAuth token) or the API
+    call fails, logs and returns an empty list so the rest of the run proceeds.
+    Run ``scripts/gen_gmail_token.py`` once to create the token.
+    """
+    try:
+        emails = await asyncio.to_thread(gmail_client.fetch_recent_emails)
+    except Exception as exc:
+        log.warning("Gmail collector skipped: %s", exc)
+        return {"email_raw_signals": []}
+
+    signals = [_to_signal(m) for m in emails]
+
+    if config.GMAIL_MARK_PROCESSED and emails:
+        try:
+            await asyncio.to_thread(
+                gmail_client.mark_processed, [m["id"] for m in emails]
+            )
+        except Exception as exc:
+            log.warning("Gmail mark-processed failed: %s", exc)
+
+    log.info("Gmail collector produced %d signal(s)", len(signals))
+    return {"email_raw_signals": signals}

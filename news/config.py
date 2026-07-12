@@ -20,6 +20,18 @@ class Settings(BaseSettings):
     EMAIL_PORT: int = 993
     EMAIL_USERNAME: str = ""
     EMAIL_PASSWORD: str = ""
+    # Gmail integration (Epic 3). All optional — the email pipeline degrades to
+    # a no-op when GMAIL_TOKEN_PATH does not exist yet.
+    GMAIL_CREDENTIALS_PATH: str = "gmail_credentials.json"
+    GMAIL_TOKEN_PATH: str = "gmail_token.json"
+    GMAIL_SENDERS: str = ""  # comma-separated whitelist, e.g. "a@b.com,news@x.io"
+    GMAIL_LABELS: str = ""  # comma-separated Gmail labels, e.g. "INBOX,Newsletters"
+    GMAIL_SUBJECT_FILTER: str = ""  # optional subject contains-filter
+    GMAIL_QUERY: str = ""  # raw extra Gmail search query, appended verbatim
+    GMAIL_LOOKBACK: str = "1d"  # recency window (Gmail newer_than: 1d, 12h, 7d…)
+    GMAIL_MAX_RESULTS: int = 25
+    GMAIL_MARK_PROCESSED: bool = False  # label+mark-read fetched mail (mutates inbox)
+    GMAIL_PROCESSED_LABEL: str = "OpenClawProcessed"
     OPENAI_API_KEY: str
     CHECKPOINT_DB_PATH: str = "checkpoints.db"
 
