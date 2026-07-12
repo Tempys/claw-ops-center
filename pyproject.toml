@@ -15,7 +15,6 @@ dependencies = [
     "pyrogram==2.0.106",
     "tgcrypto",
     "pydantic-settings>=2.0.0",
-    "mcp>=1.2.0",
 ]
 
 [dependency-groups]
