@@ -41,7 +41,10 @@ async def _enrich_one(signal: Signal) -> EnrichedSignal | None:
 
 
 async def telegram_extract_node(state: TelegramPipelineState) -> dict:
-    signals = state["telegram_raw_signals"]
+    # Collector returns {} on failure (e.g. Telegram auth error), leaving this
+    # key unset; default to [] so one failing source degrades gracefully
+    # instead of aborting the whole run.
+    signals = state.get("telegram_raw_signals", [])
     results = await asyncio.gather(*(_enrich_one(s) for s in signals))
     enriched = [r for r in results if r is not None]
     return {
